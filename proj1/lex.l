@@ -1,47 +1,43 @@
 %{
-    // just let you know you have macros!
-    // C macro tutorial in Chinese: http://c.biancheng.net/view/446.html
-    #define EXIT_OK 0
-    #define EXIT_FAIL 1
-    // global variables
-    int chars = 0;
-    int words = 0;
-    int lines = 0;
-   
-    
+    #include "syntax.tab.h"
+    #include "stdlib.h"
+    #include "ast.h"
 %}
 %option yylineno
-WhiteSpace [ \t\r\a]+
-Digit      [0-9]
-letter     [a-zA-Z]
-decimal    0|[1-9]{Digit}*
+unic u[0-9a-fA-F]{4}
+esc \\([\"\\/bfnrt]|{unic})
+scp [^"\\\x00-\x1f]
+string \"({esc}|{scp})*\"
 
+digit         [0-9]
+hex-digit     [0-9a-fA-F]
+letter        [A-Za-z]
+_letter       [a-zA-Z_]
+
+identifier ({letter}|_)({digit}|{letter}|_)*
+
+dec 0|[1-9]{digit}*
+hex 0[xX](0|[1-9a-fA-F]{hex-digit}*)
+integer -?({dec}|{hex})
+frac \.{digit}+
+float -?{dec}{frac}
+exp [Ee][+-]?[0-9]+
+char ('{_letter}')|('\\[xX][0-9a-fA-F]{1,2}')
+empty [ \n\r\t]
 
 %%
-{decimal} {printf("got decimal\n");}
-{WhiteSpace} {printf("got white\n");}
-{letter}+ { words++; chars+=strlen(yytext); }
-\n { printf("line:%d\n",yylineno); chars++; lines++; }
-. { chars++; }
+"int"|"float"|"char" { yylval = init_node("TYPE",TOKEN_WITH_VALUE,yytext,yylineno ); return TYPE; }
+"if"      { yylval = init_node( "IF", TOKEN_WITH_VALUE, "if", yylineno); return IF; }
+"else"    { yylval = init_node( "ELSE", TOKEN_WITH_VALUE,"else", yylineno ); return ELSE; }
+"return"  { yylval = init_node( "RETURN", TOKEN_WITH_VALUE,"return", yylineno); return RETURN; }
+"("       { yylval = init_node( "LP", TOKEN_WITH_VALUE, "(", yylineno); return LP; }
+")"       { yylval = init_node( "LP", TOKEN_WITH_VALUE, ")", yylineno ); return RP; }
+";"       { yylval = init_node( "SEMI", TOKEN_WITH_VALUE, ",", yylineno ); return SEMI; }
+","       { yylval = init_node( "COMMA", TOKEN_WITH_VALUE, "comma", yylineno); return COMMA; }
+{identifier} { yylval = init_node( "ID",TOKEN_WITH_VALUE,yytext,yylineno ); return ID;}
+{char}       { yylval = init_node( "CHAR",TOKEN_WITH_VALUE,yytext,yylineno); return CHAR; }
+
+{empty} {}
+. { printf("lexical error: %s\n", yytext); }
 
 %%
-int main(int argc, char **argv){
-    char *file_path;
-    if(argc < 2){
-        fprintf(stderr, "Usage: %s <file_path>\n", argv[0]);
-        return EXIT_FAIL;
-    } else if(argc == 2){
-        file_path = argv[1];
-        if(!(yyin = fopen(file_path, "r"))){
-            perror(argv[1]);
-            return EXIT_FAIL;
-        }
-        yylex();
-	printf("%-8s%-8s%-8s%s\n", "#lines", "#words", "#chars", "file path");
-        printf("%-8d%-8d%-8d%s\n", lines, words, chars, file_path);
-        return EXIT_OK;
-    } else{
-        fputs("Too many arguments! Expected: 2.\n", stderr);
-        return EXIT_FAIL;
-    }
-}
