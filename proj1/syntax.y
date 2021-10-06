@@ -1,5 +1,13 @@
 %{
+    #define YYSTYPE ast_node *
     #include "lex.yy.c"
+    #define syntax_error(line, msg) \
+            flag = 0; \
+            printf("Error type B at Line %d: %s\n", line, msg);
+
+    ast_node *root;
+    int flag = 1;
+    void yyerror(const char*);
 %}
 %token IF ELSE 
 %token INT FLOAT CHAR
@@ -13,6 +21,8 @@
 Program: ExtDefList { };
 
 %%
+
+void yyerror(const char *s) {}
 
 int main(int argc, char **argv) {
     if (argc != 2) {
