@@ -12,10 +12,11 @@ typedef struct ast_node
     token_type type;
     char* value;
     int line_num;
-    struct ast_node *child;
-    struct ast_node *sibling;
+    int children_num;
+    struct ast_node **children;
 }ast_node;
 
 char * str_copy(char * my_str);
 ast_node *init_node(char *ast_name, token_type _type, char *ast_value, int line_num);
 void print_node(ast_node *node);
+void insert_children(ast_node *, int, ...);

@@ -26,6 +26,22 @@ char * str_copy(char * my_str){
     return res;
 }
 
+void insert_children(ast_node *root, int num, ...){
+    root->children_num = num;
+    if (num > 0 ){
+        root->children = malloc(num * sizeof(ast_node *));
+    }else{
+        root->children = NULL;
+    }
+    va_list args;
+    va_start(args, num);
+    ast_node ** cur_node = root->children;
+    while(num--){
+        *cur_node = va_arg(args,ast_node *);
+        cur_node++;
+    }
+}
+
 void print_node(ast_node *node){
     
 }
