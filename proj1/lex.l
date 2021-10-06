@@ -1,6 +1,7 @@
 %{
     #include "ast.h"
     #include "syntax.tab.h"
+    int yycolno = 1;
     #define YY_USER_ACTION \
         yylloc.first_line = yylineno; \
         yylloc.first_column = yycolno; \
@@ -8,7 +9,6 @@
         yylloc.last_column = yycolno + yyleng; \
         yycolno += yyleng;
     
-    int yycolno = 1;
     void multiple_comment();
 %}
 %option yylineno

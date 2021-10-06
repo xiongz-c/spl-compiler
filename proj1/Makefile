@@ -6,9 +6,9 @@ BISON=bison
 	$(FLEX) lex.l
 .syntax: syntax.y
 	$(BISON) -t -d syntax.y
-splc: .lex .syntax
+splc: clean  .syntax .lex
 	@mkdir bin
-	$(CC) syntax.tab.c -lfl -ly -o bin/splc
+	$(CC) syntax.tab.c ast.c -lfl -ly -o bin/splc
 	@chmod +x bin/splc
 gen:
 	$(FLEX) tmp.l

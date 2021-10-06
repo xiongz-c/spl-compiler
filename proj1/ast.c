@@ -12,7 +12,7 @@ ast_node *init_node(char *ast_name, token_type _type, char *ast_value, int line_
     n->line_num = line_num;
     n->child = NULL;
     n->sibling = NULL;
-    printf("token : %s \n", ast_name);
+    printf("node : %s \n", ast_name);
     return n;
 }
 

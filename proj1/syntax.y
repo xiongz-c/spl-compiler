@@ -14,11 +14,36 @@
 %token TYPE RETURN 
 %token LP RP
 %token LC RC
-%token ExtDefList
 %token ID SEMI COMMA
-
+%token LB RB
 %%
-Program: ExtDefList { };
+Program : ExtDefList {printf("%d",@$.first_line);} 
+    ;
+ExtDefList :
+        |  ExtDef ExtDefList {}
+    ;
+ExtDef : Specifier ExtDecList SEMI {}
+        | Specifier SEMI {}
+        | Specifier FunDec CompSt {}
+    ;
+ExtDecList : VarDec {}
+        | VarDec COMMA ExtDecList {}
+    ;
+Specifier : TYPE {}
+    ;
+VarDec : ID {}
+        | VarDec LB INT RB {}
+    ;
+FunDec : ID LP VarList RP {}
+        | ID LP RP {}
+    ;
+VarList : ParamDec COMMA VarList {}
+        | ParamDec {}
+    ;
+ParamDec : Specifier VarDec {}
+    ;
+CompSt : LC  RC {}
+    ;
 
 %%
 
