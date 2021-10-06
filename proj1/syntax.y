@@ -9,13 +9,20 @@
     int flag = 1;
     void yyerror(const char*);
 %}
-%token IF ELSE 
-%token INT FLOAT CHAR
-%token TYPE RETURN 
-%token LP RP
-%token LC RC
-%token ID SEMI COMMA
-%token LB RB
+%token TYPE STRUCT IF ELSE WHILE FOR RETURN 
+%token LC RC SEMI COMMA 
+%token INT FLOAT CHAR ID FTOKEN 
+%nonassoc THEN 
+%nonassoc ELSE 
+%right ASSIGN 
+%left OR 
+%left AND 
+%left LT LE GT GE EQ NE 
+%left PLUS MINUS 
+%left MUL DIV 
+%right NOT 
+%left LP RP LB RB DOT 
+%nonassoc FTOKEN 
 %%
 Program : ExtDefList {printf("%d",@$.first_line);} 
     ;

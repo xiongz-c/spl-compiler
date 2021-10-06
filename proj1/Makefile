@@ -8,7 +8,7 @@ BISON=bison
 	$(BISON) -t -d syntax.y
 splc: clean  .syntax .lex
 	@mkdir bin
-	$(CC) syntax.tab.c ast.c -lfl -ly -o bin/splc
+	$(CC) ast.c syntax.tab.c -lfl -ly -o bin/splc
 	@chmod +x bin/splc
 gen:
 	$(FLEX) tmp.l
