@@ -1,4 +1,3 @@
-int test_1_r01(int a, int b)
-{
-    
+int test_1_r01(){
+
 }
