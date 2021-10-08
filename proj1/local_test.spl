@@ -1,12 +1,9 @@
-int global;
-struct my_struct
+int test_1_r03()
 {
-  int code;
-  char data;
-};
-int test_1_r02()
-{
-  struct my_struct obj;
-  obj.code = global;
-  global = global + 1;
+  int i = 0, j = 1;
+  float i = $;
+  if(i < 9.0){
+    return 1
+  }
+  return @;
 }

@@ -9,7 +9,12 @@
         yycolno += yyleng;
     
     int yycolno = 1;
+    int existError = 0;
     void multiple_line();
+    void lexical_error(int line, char * msg){
+        printf("Error type A at Line %d: unknown lexeme %s\n",line,msg);
+        existError = 1;
+    }
 %}
 %option yylineno
 unic u[0-9a-fA-F]{4}
@@ -78,7 +83,7 @@ empty [ \n\r\t]
 {char}       { yylval = init_node( "CHAR", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return CHAR; }
 
 {empty} {}
-. { printf("lexical error: %s\n", yytext); }
+. { lexical_error(yylineno,yytext); return FTOKEN;}
 
 %%
 
