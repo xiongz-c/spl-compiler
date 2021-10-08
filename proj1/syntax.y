@@ -63,6 +63,7 @@ FunDec: ID LP VarList RP { $$ = init_node("FunDec",NON_TERMINAL, NULL, @$.first_
         | ID LP RP {  $$ = init_node("FunDec", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);
                    }
+        | ID LP error { syntax_error(@1.first_line , "Missing closing parenthesis \")\"");}
         ;
 VarList: ParamDec COMMA VarList {  $$ = init_node("VarList",NON_TERMINAL,NULL,@$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
@@ -185,7 +186,6 @@ int main(int argc, char **argv) {
     //yydebug = 1;
     yyparse();
     //printf("%s\n",root->children[0]->name);
-    printf("%d number!", existError);
     if(!existError)print_tree(root,0);
     return 0;
 }
