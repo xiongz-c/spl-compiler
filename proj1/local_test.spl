@@ -1,3 +1,5 @@
-int test_1_r01(){
+int test_1_r01(int al,int bl){
     int a = 1;
+    int b = 2;
+    a = b;
 }
