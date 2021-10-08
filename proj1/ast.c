@@ -11,6 +11,12 @@ ast_node *init_node(char *ast_name, token_type _type, char *ast_value, int line_
     n->value = str_copy(ast_value);
     n->line_num = line_num;
     n->children = NULL;
+    if( strcmp(ast_name, "INT") == 0 && 0 ) // todo 判断是十六进制才做转换
+    {
+        int a;
+        sscanf(ast_value, "%x", &a);
+        sprintf(n->value, "%d", a);
+    }
     return n;
 }
 

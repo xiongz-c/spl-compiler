@@ -54,14 +54,14 @@ StructSpecifier: STRUCT ID LC DefList RC { $$ = init_node("StructSpecifier", NON
                                         insert_children($$, 2, $1, $2); }
         ;
 VarDec: ID { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line);
-                    insert_children($$, 1, $1); }
+                        insert_children($$, 1, $1); }
         | VarDec LB INT RB { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line); 
-                                    insert_children($$, 4, $1, $2, $3, $4); }
+                        insert_children($$, 4, $1, $2, $3, $4); }
         ;
 FunDec: ID LP VarList RP { $$ = init_node("FunDec",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 4, $1, $2, $3, $4); }
+                        insert_children($$, 4, $1, $2, $3, $4); }
         | ID LP RP {  $$ = init_node("FunDec", NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 3, $1, $2, $3);
+                        insert_children($$, 3, $1, $2, $3);
                    }
         | ID LP error { syntax_error(@1.first_line , "Missing closing parenthesis \")\"");}
         ;
@@ -73,28 +73,29 @@ VarList: ParamDec COMMA VarList {  $$ = init_node("VarList",NON_TERMINAL,NULL,@$
 ParamDec: Specifier VarDec {  $$ = init_node("ParamDec",NON_TERMINAL,NULL,@$.first_line);
                       insert_children($$, 2, $1, $2);}
         ;
-CompSt: LC RC {  $$ = init_node("CompSt",NON_TERMINAL,NULL,@$.first_line);
+CompSt: LC RC {  $$ = init_node("CompSt", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | LC DefList StmtList RC {  $$ = init_node("CompSt",NON_TERMINAL,NULL,@$.first_line);
+        | LC DefList StmtList RC {  $$ = init_node("CompSt", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 4, $1, $2, $3, $4);}
         ;
-StmtList: Stmt StmtList {  $$ = init_node("StmtList",NON_TERMINAL,NULL,@$.first_line);
+StmtList: Stmt StmtList {  $$ = init_node("StmtList", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | %empty { $$ = init_node("StmtList",NON_TERMINAL, NULL, @$.first_line); }
+        | %empty { $$ = init_node("StmtList", NON_TERMINAL, NULL, @$.first_line); }
         ;
-Stmt: Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 2, $1, $2);}
-        | CompSt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 1, $1);}
-        | RETURN Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 3, $1, $2, $3);
-                }
-        | IF LP Exp RP Stmt ELSE Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 7, $1, $2, $3, $4, $5, $6, $7);}
-        | IF LP Exp RP Stmt %prec THEN {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 5, $1, $2, $3, $4, $5);}
-        | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 4, $1, $2, $3, $4);}
+Stmt: Exp SEMI {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+                        insert_children($$, 2, $1, $2);}
+        | CompSt {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+                        insert_children($$, 1, $1);}
+        | RETURN Exp SEMI {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+                        insert_children($$, 3, $1, $2, $3);}
+        | IF LP Exp RP Stmt ELSE Stmt {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+                        insert_children($$, 7, $1, $2, $3, $4, $5, $6, $7);}
+        | IF LP Exp RP Stmt %prec THEN {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+                        insert_children($$, 5, $1, $2, $3, $4, $5);}
+        | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+                        insert_children($$, 5, $1, $2, $3, $4, $5);}
+        | FOR LP ForVarList RP Stmt { if(existError){$$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+                        insert_children($$, 5, $1, $2, $3, $4, $5);} }
         | RETURN Exp error { syntax_error(@1.first_line , "Missing semicolon \";\"");}
         ;
 
@@ -153,18 +154,21 @@ Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
         | ID LP RP {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         | Exp LB Exp RB {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 3, $1, $2, $3, $4);}
+                      insert_children($$, 4, $1, $2, $3, $4);}
         | Exp DOT ID {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         | ID {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
         | INT {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
-        | FLOAT {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
+        | FLOAT {  $$ = init_node("Exp", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
-        | CHAR {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
+        | CHAR {  $$ = init_node("Exp", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
         | FTOKEN { existError = 1; }
+        ;
+ForVarList: DecList SEMI Exp SEMI Args  { $$ = init_node("ForVarList", NON_TERMINAL, NULL, @$.first_line);
+                                                insert_children($$, 5, $1, $2, $3, $4, $5);}
         ;
 Args: Exp COMMA Args {  $$ = init_node("Args",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
