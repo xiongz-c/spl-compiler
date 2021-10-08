@@ -32,7 +32,7 @@ ExtDefList: %empty {$$ = init_node("ExtDefList",NON_TERMINAL, NULL, @$.first_lin
                                insert_children($$, 2, $1, $2);}  //需要处理 最后一个extdef不打印
         ;
 ExtDef: Specifier ExtDecList SEMI { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
-                                    insert_children($$, 2, $1, $2); }
+                                    insert_children($$, 3, $1, $2, $3); }
         | Specifier SEMI { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 2, $1, $2); }
         | Specifier FunDec CompSt { $$ = init_node("ExtDef", NON_TERMINAL,NULL, @$.first_line); 
@@ -44,7 +44,7 @@ ExtDecList: VarDec { $$ = init_node("ExtDecList", NON_TERMINAL,NULL, @$.first_li
                                     insert_children($$, 3, $1, $2, $3); }
         ;
 Specifier: TYPE {  $$ = init_node("Specifier",NON_TERMINAL,NULL,@$.first_line);
-                    insert_children($$,1,$1); }
+                    insert_children($$, 1, $1); }
         ;
 VarDec: ID { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line);
                     insert_children($$, 1, $1); }
@@ -72,7 +72,7 @@ CompSt: LC RC {  $$ = init_node("CompSt",NON_TERMINAL,NULL,@$.first_line);
         ;
 StmtList: Stmt StmtList {  $$ = init_node("StmtList",NON_TERMINAL,NULL,@$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | %empty {$$ = init_node("StmtList",NON_TERMINAL, NULL, @$.first_line); }
+        | %empty { $$ = init_node("StmtList",NON_TERMINAL, NULL, @$.first_line); }
         ;
 Stmt: Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 2, $1, $2);}
@@ -82,9 +82,9 @@ Stmt: Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);
                 }
         | IF LP Exp RP Stmt ELSE Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 6, $1, $2, $3, $4, $5, $6);}
-        | IF LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);   
-                      insert_children($$, 4, $1, $2, $3, $4);}
+                      insert_children($$, 7, $1, $2, $3, $4, $5, $6, $7);}
+        | IF LP Exp RP Stmt %prec THEN {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
+                      insert_children($$, 5, $1, $2, $3, $4, $5);}
         | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 4, $1, $2, $3, $4);}
         ;
@@ -102,7 +102,8 @@ DecList: Dec {  $$ = init_node("DecList",NON_TERMINAL, NULL, @$.first_line);
         | Dec COMMA DecList {  $$ = init_node("DecList",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         ;
-Dec: VarDec
+Dec: VarDec {  $$ = init_node("Dec",NON_TERMINAL, NULL, @$.first_line);
+                      insert_children($$, 1, $1);}
         | VarDec ASSIGN Exp {  $$ = init_node("Dec",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         ;
@@ -138,7 +139,8 @@ Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 2, $1, $2);}
         | NOT Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | ID LP Args RP
+        | ID LP Args RP {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
+                      insert_children($$, 4, $1, $2, $3, $4);}
         | ID LP RP {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         | Exp LB Exp RB {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
@@ -171,7 +173,7 @@ int main(int argc, char **argv) {
         perror(argv[1]);
         exit(-1);
     }
-    yydebug=1;
+    //yydebug = 1;
     yyparse();
     //printf("%s\n",root->children[0]->name);
 
