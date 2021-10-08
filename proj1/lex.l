@@ -72,8 +72,8 @@ empty [ \n\r\t]
 "//" { char c; while((c=input()) != '\n'); }
 "/*" { multiple_line(); }
 
-{integer}    { yylval = init_node("INT", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return INT; }
-{float}      { yylval = init_node("FLOAT", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return FLOAT; }
+{integer}    { yylval = init_node( "INT", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return INT; }
+{float}      { yylval = init_node( "FLOAT", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return FLOAT; }
 {identifier} { yylval = init_node( "ID", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return ID;}
 {char}       { yylval = init_node( "CHAR", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return CHAR; }
 

@@ -46,16 +46,15 @@ void print_node(ast_node *node){
 
 void print_tree(ast_node *root, int height){
     if (root == NULL)return;
+    if (root->type == NON_TERMINAL && root->children_num == 0)return;
     for(int i = 0; i < height ; i++){
         printf("  ");
     }
-    printf("%s (%d)\n",root->name,root->line_num);
-    //ast_node** cur = root->children;
-    // while ( cur != NULL) {
-    //     print_tree(*cur,height+1);
-    //     cur++;
-    // }
-
+    if (root->type == NON_TERMINAL){
+        printf("%s (%d)\n",root->name,root->line_num);
+    }
+    if (root->type == TERMINAL_WITH_ATTRIBUTE)printf("%s: %s\n",root->name, root->value);
+    if (root->type == TERMINAL_WITHOUT_ATTRIBUTE)printf("%s\n",root->name);
     for (int i = 0 ; i < root->children_num ; i++){
         print_tree(root->children[i],height+1);
     }
