@@ -1,12 +1,10 @@
-int global;
-struct my_struct
+int test_1_r05(int n)
 {
-  int code;
-  char data;
-};
-int test_1_r02()
-{
-  struct my_struct obj;
-  obj.code = global;
-  global = global + 1;
+  int res = 1;
+  while (n > 0)
+  {
+    res = res * n;
+    n = n - 1;
+  }
+  return res;
 }
