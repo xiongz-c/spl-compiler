@@ -79,10 +79,11 @@ Stmt: Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
         | CompSt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
         | RETURN Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 3, $1, $2, $3);}
+                      insert_children($$, 3, $1, $2, $3);
+                }
         | IF LP Exp RP Stmt ELSE Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 6, $1, $2, $3, $4, $5, $6);}
-        | IF LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
+        | IF LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);   
                       insert_children($$, 4, $1, $2, $3, $4);}
         | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 4, $1, $2, $3, $4);}
@@ -170,6 +171,7 @@ int main(int argc, char **argv) {
         perror(argv[1]);
         exit(-1);
     }
+    yydebug=1;
     yyparse();
     //printf("%s\n",root->children[0]->name);
 
