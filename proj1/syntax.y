@@ -54,14 +54,14 @@ StructSpecifier: STRUCT ID LC DefList RC { $$ = init_node("StructSpecifier", NON
                                         insert_children($$, 2, $1, $2); }
         ;
 VarDec: ID { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line);
-                    insert_children($$, 1, $1); }
+                        insert_children($$, 1, $1); }
         | VarDec LB INT RB { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line); 
-                                    insert_children($$, 4, $1, $2, $3, $4); }
+                        insert_children($$, 4, $1, $2, $3, $4); }
         ;
 FunDec: ID LP VarList RP { $$ = init_node("FunDec",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 4, $1, $2, $3, $4); }
+                        insert_children($$, 4, $1, $2, $3, $4); }
         | ID LP RP {  $$ = init_node("FunDec", NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 3, $1, $2, $3);
+                        insert_children($$, 3, $1, $2, $3);
                    }
         ;
 VarList: ParamDec COMMA VarList {  $$ = init_node("VarList",NON_TERMINAL,NULL,@$.first_line);
@@ -152,7 +152,7 @@ Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
         | ID LP RP {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         | Exp LB Exp RB {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
-                      insert_children($$, 3, $1, $2, $3, $4);}
+                      insert_children($$, 4, $1, $2, $3, $4);}
         | Exp DOT ID {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         | ID {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);

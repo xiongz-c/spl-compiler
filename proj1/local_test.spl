@@ -1,10 +1,9 @@
-int test_1_r05(int n)
+int test_1_r09()
 {
-  int res = 1;
-  while (n > 0)
-  {
-    res = res * n;
-    n = n - 1;
-  }
-  return res;
+  int m = 1;
+  float n = 2.2;
+  int x[5], y[10];
+  x[m] = 7;
+  y[n] = 8;
+  return x[y];
 }
