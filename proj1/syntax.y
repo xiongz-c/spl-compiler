@@ -51,8 +51,9 @@ VarDec: ID { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line);
         | VarDec LB INT RB { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 4, $1, $2, $3, $4); }
         ;
-FunDec: ID LP VarList RP {}
-        | ID LP RP {  $$ = init_node("FunDec",NON_TERMINAL,NULL,@$.first_line);
+FunDec: ID LP VarList RP { $$ = init_node("FunDec",NON_TERMINAL, NULL, @$.first_line);
+                      insert_children($$, 4, $1, $2, $3, $4); }
+        | ID LP RP {  $$ = init_node("FunDec", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);
                    }
         ;
