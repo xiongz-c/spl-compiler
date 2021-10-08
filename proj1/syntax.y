@@ -25,136 +25,136 @@
 %nonassoc FTOKEN 
 %%
 Program: ExtDefList { 
-    root = $$ = init_node("Program", TOKEN_WITH_VALUE, "Program", @$.first_line ); insert_children($$,1,$1);} 
+    root = $$ = init_node("Program", NON_TERMINAL, "Program", @$.first_line ); insert_children($$,1,$1);} 
         ;
 ExtDefList: %empty {$$ = init_node("ExtDefList",NON_TERMINAL, NULL, @$.first_line); }
-        |  ExtDef ExtDefList { $$ = init_node("ExtDefList",TOKEN_WITH_VALUE,"ExtDefList", @$.first_line); 
+        |  ExtDef ExtDefList { $$ = init_node("ExtDefList",NON_TERMINAL,"ExtDefList", @$.first_line); 
                                insert_children($$, 2, $1, $2);}  //需要处理 最后一个extdef不打印
         ;
-ExtDef: Specifier ExtDecList SEMI { $$ = init_node("ExtDef", TOKEN_WITH_VALUE,"ExtDef", @$.first_line); 
+ExtDef: Specifier ExtDecList SEMI { $$ = init_node("ExtDef", NON_TERMINAL,"ExtDef", @$.first_line); 
                                     insert_children($$, 2, $1, $2); }
-        | Specifier SEMI { $$ = init_node("ExtDef", TOKEN_WITH_VALUE,"ExtDef", @$.first_line); 
+        | Specifier SEMI { $$ = init_node("ExtDef", NON_TERMINAL,"ExtDef", @$.first_line); 
                                     insert_children($$, 2, $1, $2); }
-        | Specifier FunDec CompSt { $$ = init_node("ExtDef", TOKEN_WITH_VALUE,"ExtDef", @$.first_line); 
+        | Specifier FunDec CompSt { $$ = init_node("ExtDef", NON_TERMINAL,"ExtDef", @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
         ;
-ExtDecList: VarDec { $$ = init_node("ExtDecList", TOKEN_WITH_VALUE,"ExtDecList", @$.first_line); 
+ExtDecList: VarDec { $$ = init_node("ExtDecList", NON_TERMINAL,"ExtDecList", @$.first_line); 
                                     insert_children($$, 1, $1); }
-        | VarDec COMMA ExtDecList { $$ = init_node("ExtDecList", TOKEN_WITH_VALUE,"ExtDecList", @$.first_line); 
+        | VarDec COMMA ExtDecList { $$ = init_node("ExtDecList", NON_TERMINAL,"ExtDecList", @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
         ;
-Specifier: TYPE {  $$ = init_node("Specifier",TOKEN_WITH_VALUE,"Specifier",@$.first_line);
+Specifier: TYPE {  $$ = init_node("Specifier",NON_TERMINAL,"Specifier",@$.first_line);
                     insert_children($$,1,$1); }
         ;
-VarDec: ID { $$ = init_node("VarDec", TOKEN_WITH_VALUE, "VarDec", @$.first_line);
+VarDec: ID { $$ = init_node("VarDec", NON_TERMINAL, "VarDec", @$.first_line);
                     insert_children($$, 1, $1); }
-        | VarDec LB INT RB { $$ = init_node("VarDec", TOKEN_WITH_VALUE, "VarDec", @$.first_line); 
+        | VarDec LB INT RB { $$ = init_node("VarDec", NON_TERMINAL, "VarDec", @$.first_line); 
                                     insert_children($$, 4, $1, $2, $3, $4); }
         ;
 FunDec: ID LP VarList RP {}
-        | ID LP RP {  $$ = init_node("FunDec",TOKEN_WITH_VALUE,"FunDec",@$.first_line);
+        | ID LP RP {  $$ = init_node("FunDec",NON_TERMINAL,"FunDec",@$.first_line);
                       insert_children($$, 3, $1, $2, $3);
                    }
         ;
-VarList: ParamDec COMMA VarList {  $$ = init_node("VarList",TOKEN_WITH_VALUE,"VarList",@$.first_line);
+VarList: ParamDec COMMA VarList {  $$ = init_node("VarList",NON_TERMINAL,"VarList",@$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | ParamDec {  $$ = init_node("VarList",TOKEN_WITH_VALUE,"VarList",@$.first_line);
+        | ParamDec {  $$ = init_node("VarList",NON_TERMINAL,"VarList",@$.first_line);
                       insert_children($$, 1, $1);}
         ;
-ParamDec: Specifier VarDec {  $$ = init_node("ParamDec",TOKEN_WITH_VALUE,"ParamDec",@$.first_line);
+ParamDec: Specifier VarDec {  $$ = init_node("ParamDec",NON_TERMINAL,"ParamDec",@$.first_line);
                       insert_children($$, 2, $1, $2);}
         ;
-CompSt: LC RC {  $$ = init_node("CompSt",TOKEN_WITH_VALUE,"CompSt",@$.first_line);
+CompSt: LC RC {  $$ = init_node("CompSt",NON_TERMINAL,"CompSt",@$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | LC DefList StmtList RC {  $$ = init_node("CompSt",TOKEN_WITH_VALUE,"CompSt",@$.first_line);
+        | LC DefList StmtList RC {  $$ = init_node("CompSt",NON_TERMINAL,"CompSt",@$.first_line);
                       insert_children($$, 4, $1, $2, $3, $4);}
         ;
-StmtList: Stmt StmtList {  $$ = init_node("StmtList",TOKEN_WITH_VALUE,"StmtList",@$.first_line);
+StmtList: Stmt StmtList {  $$ = init_node("StmtList",NON_TERMINAL,"StmtList",@$.first_line);
                       insert_children($$, 2, $1, $2);}
         | %empty {$$ = init_node("StmtList",NON_TERMINAL, NULL, @$.first_line); }
         ;
-Stmt: Exp SEMI {  $$ = init_node("Stmt",TOKEN_WITH_VALUE, "Stmt", @$.first_line);
+Stmt: Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, "Stmt", @$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | CompSt {  $$ = init_node("Stmt",TOKEN_WITH_VALUE, "Stmt", @$.first_line);
+        | CompSt {  $$ = init_node("Stmt",NON_TERMINAL, "Stmt", @$.first_line);
                       insert_children($$, 1, $1);}
-        | RETURN Exp SEMI {  $$ = init_node("Stmt",TOKEN_WITH_VALUE, "Stmt", @$.first_line);
+        | RETURN Exp SEMI {  $$ = init_node("Stmt",NON_TERMINAL, "Stmt", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | IF LP Exp RP Stmt ELSE Stmt {  $$ = init_node("Stmt",TOKEN_WITH_VALUE, "Stmt", @$.first_line);
+        | IF LP Exp RP Stmt ELSE Stmt {  $$ = init_node("Stmt",NON_TERMINAL, "Stmt", @$.first_line);
                       insert_children($$, 6, $1, $2, $3, $4, $5, $6);}
-        | IF LP Exp RP Stmt {  $$ = init_node("Stmt",TOKEN_WITH_VALUE, "Stmt", @$.first_line);
+        | IF LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, "Stmt", @$.first_line);
                       insert_children($$, 4, $1, $2, $3, $4);}
-        | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt",TOKEN_WITH_VALUE, "Stmt", @$.first_line);
+        | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt",NON_TERMINAL, "Stmt", @$.first_line);
                       insert_children($$, 4, $1, $2, $3, $4);}
         ;
 
 /* local definition */
-DefList: Def DefList {  $$ = init_node("DefList",TOKEN_WITH_VALUE, "DefList", @$.first_line);
+DefList: Def DefList {  $$ = init_node("DefList",NON_TERMINAL, "DefList", @$.first_line);
                       insert_children($$, 2, $1, $2);}
         | %empty {$$ = init_node("DefList",NON_TERMINAL, NULL, @$.first_line); }
         ;
-Def: Specifier DecList SEMI {  $$ = init_node("Def",TOKEN_WITH_VALUE, "Def", @$.first_line);
+Def: Specifier DecList SEMI {  $$ = init_node("Def",NON_TERMINAL, "Def", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         ;
-DecList: Dec {  $$ = init_node("DecList",TOKEN_WITH_VALUE, "DecList", @$.first_line);
+DecList: Dec {  $$ = init_node("DecList",NON_TERMINAL, "DecList", @$.first_line);
                       insert_children($$, 1, $1);}
-        | Dec COMMA DecList {  $$ = init_node("DecList",TOKEN_WITH_VALUE, "DecList", @$.first_line);
+        | Dec COMMA DecList {  $$ = init_node("DecList",NON_TERMINAL, "DecList", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         ;
 Dec: VarDec
-        | VarDec ASSIGN Exp {  $$ = init_node("Dec",TOKEN_WITH_VALUE, "Dec", @$.first_line);
+        | VarDec ASSIGN Exp {  $$ = init_node("Dec",NON_TERMINAL, "Dec", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         ;
-Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp AND Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp AND Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp OR Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp OR Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp LT Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp LT Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp LE Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp LE Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp GT Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp GT Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp GE Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp GE Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp NE Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp NE Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp EQ Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp EQ Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp PLUS Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp PLUS Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp MINUS Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp MINUS Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp MUL Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp MUL Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp DIV Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp DIV Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | LP Exp RP {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | LP Exp RP {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | MINUS Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | MINUS Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | NOT Exp {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | NOT Exp {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 2, $1, $2);}
         | ID LP Args RP
-        | ID LP RP {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | ID LP RP {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp LB Exp RB {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp LB Exp RB {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3, $4);}
-        | Exp DOT ID {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | Exp DOT ID {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | ID {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | ID {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 1, $1);}
-        | INT {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | INT {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 1, $1);}
-        | FLOAT {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | FLOAT {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 1, $1);}
-        | CHAR {  $$ = init_node("Exp",TOKEN_WITH_VALUE, "Exp", @$.first_line);
+        | CHAR {  $$ = init_node("Exp",NON_TERMINAL, "Exp", @$.first_line);
                       insert_children($$, 1, $1);}
         ;
-Args: Exp COMMA Args {  $$ = init_node("Args",TOKEN_WITH_VALUE, "Args", @$.first_line);
+Args: Exp COMMA Args {  $$ = init_node("Args",NON_TERMINAL, "Args", @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Exp {  $$ = init_node("Args",TOKEN_WITH_VALUE, "Args", @$.first_line);
+        | Exp {  $$ = init_node("Args",NON_TERMINAL, "Args", @$.first_line);
                       insert_children($$, 1, $1);}
         ;
 %%
