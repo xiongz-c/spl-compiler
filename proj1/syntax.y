@@ -29,22 +29,29 @@ Program: ExtDefList {
         ;
 ExtDefList: %empty {$$ = init_node("ExtDefList",NON_TERMINAL, NULL, @$.first_line); }
         |  ExtDef ExtDefList { $$ = init_node("ExtDefList",NON_TERMINAL, NULL, @$.first_line); 
-                               insert_children($$, 2, $1, $2);}  //需要处理 最后一个extdef不打印
+                               insert_children($$, 2, $1, $2);}
         ;
 ExtDef: Specifier ExtDecList SEMI { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
         | Specifier SEMI { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 2, $1, $2); }
-        | Specifier FunDec CompSt { $$ = init_node("ExtDef", NON_TERMINAL,NULL, @$.first_line); 
+        | Specifier FunDec CompSt { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
         ;
-ExtDecList: VarDec { $$ = init_node("ExtDecList", NON_TERMINAL,NULL, @$.first_line); 
+ExtDecList: VarDec { $$ = init_node("ExtDecList", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 1, $1); }
-        | VarDec COMMA ExtDecList { $$ = init_node("ExtDecList", NON_TERMINAL,NULL, @$.first_line); 
+        | VarDec COMMA ExtDecList { $$ = init_node("ExtDecList", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
         ;
-Specifier: TYPE {  $$ = init_node("Specifier",NON_TERMINAL,NULL,@$.first_line);
+Specifier: TYPE {  $$ = init_node("Specifier", NON_TERMINAL, NULL, @$.first_line);
                     insert_children($$, 1, $1); }
+        | StructSpecifier {  $$ = init_node("Specifier", NON_TERMINAL, NULL, @$.first_line);
+                    insert_children($$, 1, $1); }
+        ;
+StructSpecifier: STRUCT ID LC DefList RC { $$ = init_node("StructSpecifier", NON_TERMINAL, NULL, @$.first_line);
+                                        insert_children($$, 5, $1, $2, $3, $4, $5); }
+                | STRUCT ID { $$ = init_node("StructSpecifier", NON_TERMINAL, NULL, @$.first_line);
+                                        insert_children($$, 2, $1, $2); }
         ;
 VarDec: ID { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line);
                     insert_children($$, 1, $1); }
@@ -172,7 +179,6 @@ int main(int argc, char **argv) {
         perror(argv[1]);
         exit(-1);
     }
-    yydebug = 1;
     yyparse();
     //printf("%s\n",root->children[0]->name);
 
