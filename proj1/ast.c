@@ -11,7 +11,8 @@ ast_node *init_node(char *ast_name, token_type _type, char *ast_value, int line_
     n->value = str_copy(ast_value);
     n->line_num = line_num;
     n->children = NULL;
-    if( strcmp(ast_name, "INT") == 0 && 0 ) // todo 判断是十六进制才做转换
+    if( strcmp(ast_name, "INT") == 0 && strlen(ast_value) > 2 && 
+    ( ast_value[1] == 'x' || ast_value[2] == 'x' || ast_value[1] == 'X' || ast_value[2] == 'X') )
     {
         int a;
         sscanf(ast_value, "%x", &a);
