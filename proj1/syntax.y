@@ -37,6 +37,7 @@ ExtDef: Specifier ExtDecList SEMI { $$ = init_node("ExtDef", NON_TERMINAL, NULL,
                                     insert_children($$, 2, $1, $2); }
         | Specifier FunDec CompSt { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
+        | Specifier ExtDecList error { syntax_error(@1.first_line , "Missing semicolon \";\"");}
         ;
 ExtDecList: VarDec { $$ = init_node("ExtDecList", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 1, $1); }
@@ -97,6 +98,7 @@ Stmt: Exp SEMI {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
         | FOR LP ForVarList RP Stmt { if(existError){$$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);} }
         | RETURN Exp error { syntax_error(@1.first_line , "Missing semicolon \";\"");}
+        | Exp error { syntax_error(@1.first_line , "Missing semicolon \";\""); }
         ;
 
 /* local definition */
@@ -106,6 +108,7 @@ DefList: Def DefList {  $$ = init_node("DefList",NON_TERMINAL, NULL, @$.first_li
         ;
 Def: Specifier DecList SEMI {  $$ = init_node("Def",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
+        | Specifier DecList error {syntax_error(@1.first_line , "Missing semicolon \";\"");}
         ;
 DecList: Dec {  $$ = init_node("DecList",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
@@ -165,7 +168,9 @@ Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
         | CHAR {  $$ = init_node("Exp", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
-        | FTOKEN { existError = 1; }
+        | FTOKEN error { existError = 1; }
+        | Exp FTOKEN Exp error  { existError = 1; }
+        | ID LP Args error { syntax_error(@1.first_line , "Missing semicolon \")\""); }
         ;
 ForVarList: DecList SEMI Exp SEMI Args  { $$ = init_node("ForVarList", NON_TERMINAL, NULL, @$.first_line);
                                                 insert_children($$, 5, $1, $2, $3, $4, $5);}

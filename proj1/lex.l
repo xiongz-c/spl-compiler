@@ -27,6 +27,7 @@ hex-digit     [0-9a-fA-F]
 letter        [A-Za-z]
 _letter       [a-zA-Z_]
 
+fakeId     {digit}({letter}|_)({digit}|{letter}|_)*
 identifier ({letter}|_)({digit}|{letter}|_)*
 
 dec 0|[1-9]{digit}*
@@ -83,7 +84,7 @@ empty [ \n\r\t]
 {char}       { yylval = init_node( "CHAR", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return CHAR; }
 
 {empty} {}
-. { lexical_error(yylineno,yytext); return FTOKEN;}
+.|{fakeId} {  lexical_error(yylineno,yytext); return FTOKEN;}
 
 %%
 
