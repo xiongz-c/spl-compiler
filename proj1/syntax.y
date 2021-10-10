@@ -1,12 +1,12 @@
 %{
     #define YYSTYPE ast_node *
     #include "lex.yy.c"
-    #define syntax_error(line, msg) \
-            flag = 0; \
-            printf("Error type B at Line %d: %s\n", line, msg);
-
+    void syntax_error(int line , char * msg){
+        existError = 1;
+        printf("Error type B at Line %d: %s\n",line,msg);
+    }
     ast_node *root;
-    int flag = 1;
+    
     void yyerror(const char*);
 %}
 %token TYPE STRUCT IF ELSE WHILE FOR RETURN 
@@ -63,6 +63,7 @@ FunDec: ID LP VarList RP { $$ = init_node("FunDec",NON_TERMINAL, NULL, @$.first_
         | ID LP RP {  $$ = init_node("FunDec", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 3, $1, $2, $3);
                    }
+        | ID LP error { syntax_error(@1.first_line , "Missing closing parenthesis \")\"");}
         ;
 VarList: ParamDec COMMA VarList {  $$ = init_node("VarList",NON_TERMINAL,NULL,@$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
@@ -93,8 +94,9 @@ Stmt: Exp SEMI {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);}
         | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);}
-        | FOR LP ForVarList RP Stmt { if(flag){$$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+        | FOR LP ForVarList RP Stmt { if(existError){$$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);} }
+        | RETURN Exp error { syntax_error(@1.first_line , "Missing semicolon \";\"");}
         ;
 
 /* local definition */
@@ -163,6 +165,7 @@ Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
         | CHAR {  $$ = init_node("Exp", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
+        | FTOKEN { existError = 1; }
         ;
 ForVarList: DecList SEMI Exp SEMI Args  { $$ = init_node("ForVarList", NON_TERMINAL, NULL, @$.first_line);
                                                 insert_children($$, 5, $1, $2, $3, $4, $5);}
@@ -184,10 +187,10 @@ int main(int argc, char **argv) {
         perror(argv[1]);
         exit(-1);
     }
+    //yydebug = 1;
     yyparse();
     //printf("%s\n",root->children[0]->name);
-
-    print_tree(root,0);
+    if(!existError)print_tree(root,0);
     return 0;
 }
 // make clean;make
