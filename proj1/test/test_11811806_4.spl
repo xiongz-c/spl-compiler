@@ -1,0 +1,12 @@
+struct foo1 {
+    int attr = ~;
+} s1, s2[3]
+
+int f002() {
+    return 0;
+}
+
+int test_11711906_1() {
+    int a = f002);
+    return 0;
+}

@@ -17,26 +17,24 @@
     }
 %}
 %option yylineno
-unic u[0-9a-fA-F]{4}
-esc \\([\"\\/bfnrt]|{unic})
-scp [^"\\\x00-\x1f]
-string \"({esc}|{scp})*\"
-
 digit         [0-9]
-hex-digit     [0-9a-fA-F]
+hexDigit     [0-9a-fA-F]
 letter        [A-Za-z]
 _letter       [a-zA-Z_]
+
+hexChar '\\[xX]{hexDigit}{1,2}'
 
 fakeId     {digit}({letter}|_)({digit}|{letter}|_)*
 identifier ({letter}|_)({digit}|{letter}|_)*
 
 dec 0|[1-9]{digit}*
-hex 0[xX](0|[1-9a-fA-F]{hex-digit}*)
+hex 0[xX](0|[1-9a-fA-F]{hexDigit}*)
 integer -?({dec}|{hex})
 frac \.{digit}+
 float -?{dec}{frac}
-exp [Ee][+-]?[0-9]+
-char ('{_letter}')|('\\[xX][0-9a-fA-F]{1,2}')
+char ('[ -~]')|{hexChar}
+fakeChar '\\[xX].+'
+fakeInt [0-9]+
 empty [ \n\r\t]
 
 %%
@@ -84,7 +82,7 @@ empty [ \n\r\t]
 {char}       { yylval = init_node( "CHAR", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return CHAR; }
 
 {empty} {}
-.|{fakeId} {  lexical_error(yylineno,yytext); return FTOKEN;}
+.|{fakeId}|{fakeChar}|{fakeInt} {  lexical_error(yylineno,yytext); return FTOKEN;}
 
 %%
 
