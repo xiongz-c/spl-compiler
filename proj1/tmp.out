@@ -1,3 +1,0 @@
-bison -t -d syntax.y
-flex lex.l
-gcc ast.c syntax.tab.c -lfl -ly -o bin/splc
