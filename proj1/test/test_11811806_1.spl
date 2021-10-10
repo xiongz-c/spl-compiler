@@ -1,0 +1,5 @@
+int pixiv(){
+    int x = 0XFfFfFfff;
+    int y = 0.0
+    return 0;
+}
