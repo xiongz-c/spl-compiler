@@ -38,7 +38,7 @@ ExtDef: Specifier ExtDecList SEMI { $$ = init_node("ExtDef", NON_TERMINAL, NULL,
                                     insert_children($$, 2, $1, $2); }
         | Specifier FunDec CompSt { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
-        | Specifier ExtDecList error { syntax_error(@2.last_line , "Missing semicolon\";\"");}
+        | Specifier ExtDecList error { syntax_error(@2.last_line , "Missing semicolon\';\'");}
         | Specifier error SEMI {syntax_error(@3.last_line , "Definition not match rules");}
         ;
 ExtDecList: VarDec { $$ = init_node("ExtDecList", NON_TERMINAL, NULL, @$.first_line); 
@@ -57,27 +57,27 @@ StructSpecifier: STRUCT ID LC DefList RC { $$ = init_node("StructSpecifier", NON
                                         insert_children($$, 2, $1, $2); }
                 | STRUCT FAKEID error { existError = 1;}
                 | STRUCT FAKEID LC DefList RC error { existError = 1;}
-                | STRUCT ID LC DefList error {syntax_error(@4.last_line , "Missing \"}\""); }
+                | STRUCT ID LC DefList error {syntax_error(@4.last_line , "Missing \'}\'"); }
         ;
 VarDec: ID { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 1, $1); }
         | VarDec LB INT RB { $$ = init_node("VarDec", NON_TERMINAL, NULL, @$.first_line); 
                         insert_children($$, 4, $1, $2, $3, $4); }
         | FAKEID {existError = 1;}
-        | VarDec LB INT error {syntax_error(@3.last_line,"Missing \"]\"");}
-        | VarDec INT RB error {syntax_error(@3.last_line,"Missing \"[\"");}
+        | VarDec LB INT error {syntax_error(@3.last_line,"Missing \']\'");}
+        | VarDec INT RB error {syntax_error(@3.last_line,"Missing \'[\'");}
         ;
 FunDec: ID LP VarList RP { $$ = init_node("FunDec",NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 4, $1, $2, $3, $4); }
         | ID LP RP {  $$ = init_node("FunDec", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 3, $1, $2, $3);
                    }
-        | ID LP error { syntax_error(@1.first_line , "Missing closing parenthesis \")\"");}
-        | ID LP VarList error { syntax_error(@1.first_line , "Missing closing parenthesis \")\"");}
+        | ID LP error { syntax_error(@1.first_line , "Missing closing parenthesis \')\'");}
+        | ID LP VarList error { syntax_error(@1.first_line , "Missing closing parenthesis \')\'");}
         | FAKEID LP VarList RP {existError = 1;}
         | FAKEID LP RP {existError = 1;}
-        | FAKEID LP VarList error { syntax_error(@1.first_line , "Missing closing parenthesis \")\"");}
-        | FAKEID LP error { syntax_error(@1.first_line , "Missing closing parenthesis \")\"");}
+        | FAKEID LP VarList error { syntax_error(@1.first_line , "Missing closing parenthesis \')\'");}
+        | FAKEID LP error { syntax_error(@1.first_line , "Missing closing parenthesis \')\'");}
         ;
 VarList: ParamDec COMMA VarList {  $$ = init_node("VarList",NON_TERMINAL,NULL,@$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
@@ -89,7 +89,7 @@ ParamDec: Specifier VarDec {  $$ = init_node("ParamDec",NON_TERMINAL,NULL,@$.fir
         ;
 CompSt: LC RC {  $$ = init_node("CompSt", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 2, $1, $2);}
-        | LC DefList error {syntax_error(@3.last_line , "Missing \"}\"");}
+        | LC DefList error {syntax_error(@3.last_line , "Missing \'}\'");}
         | LC DefList StmtList RC {  $$ = init_node("CompSt", NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 4, $1, $2, $3, $4);}   
         ;
@@ -111,11 +111,11 @@ Stmt: Exp SEMI {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);}
         | FOR LP ForVarList RP Stmt { if(existError){$$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);} }
-        | IF LP Exp error Stmt ELSE Stmt  { syntax_error(@3.last_line, "Missing closing parenthesis ')'"); }
-        | IF LP Exp error Stmt %prec THEN { syntax_error(@3.last_line, "Missing closing parenthesis ')'"); }
-        | RETURN Exp error { syntax_error(@1.first_line , "Missing semicolon \";\"");}
-        | Exp error { syntax_error(@1.first_line , "Missing semicolon \";\""); }
-        | Exp SEMI SEMI error { syntax_error(@3.first_line , "Multiple \";\""); }
+        | IF LP Exp error Stmt ELSE Stmt  { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
+        | IF LP Exp error Stmt %prec THEN { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
+        | RETURN Exp error { syntax_error(@1.first_line , "Missing semicolon \';\'");}
+        | Exp error { syntax_error(@1.first_line , "Missing semicolon \';\'"); }
+        | Exp SEMI SEMI error { syntax_error(@3.first_line , "Multiple \';\'"); }
         ;
 
 /* local definition */
@@ -126,8 +126,8 @@ DefList: Def DefList {  $$ = init_node("DefList",NON_TERMINAL, NULL, @$.first_li
         ;
 Def: Specifier DecList SEMI {  $$ = init_node("Def",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | Specifier DecList SEMI SEMI error {syntax_error(@1.first_line , "Multiple \";\"");}
-        | Specifier DecList error {syntax_error(@1.first_line , "Missing semicolon \";\"");}
+        | Specifier DecList SEMI SEMI error {syntax_error(@1.first_line , "Multiple \';\'");}
+        | Specifier DecList error {syntax_error(@1.first_line , "Missing semicolon \';\'");}
         ;
 DecList: Dec {  $$ = init_node("DecList",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
@@ -138,7 +138,12 @@ Dec: VarDec {  $$ = init_node("Dec",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
         | VarDec ASSIGN Exp {  $$ = init_node("Dec",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
-        | VarDec error Exp {syntax_error(@2.first_line , "Wrong Assign Operation");}
+        | VarDec LT Exp error {syntax_error(@2.first_line , "Wrong Assign Operation");}
+        | VarDec LE Exp error {syntax_error(@2.first_line , "Wrong Assign Operation");}
+        | VarDec GT Exp error {syntax_error(@2.first_line , "Wrong Assign Operation");}
+        | VarDec GE Exp error {syntax_error(@2.first_line , "Wrong Assign Operation");}
+        | VarDec NE Exp error {syntax_error(@2.first_line , "Wrong Assign Operation");}
+        | VarDec EQ Exp error {syntax_error(@2.first_line , "Wrong Assign Operation");}
         ;
 Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
@@ -191,7 +196,7 @@ Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
         | FTOKEN error { existError = 1; }
         | FAKEID {existError = 1; }
         | Exp FTOKEN Exp error  { existError = 1; }
-        | ID LP Args error { syntax_error(@1.first_line , "Missing closing parenthesis \")\""); }
+        | ID LP Args error { syntax_error(@1.first_line , "Missing closing parenthesis \')\'"); }
         ;
 ForVarList: DecList SEMI Exp SEMI Args  { $$ = init_node("ForVarList", NON_TERMINAL, NULL, @$.first_line);
                                                 insert_children($$, 5, $1, $2, $3, $4, $5);}

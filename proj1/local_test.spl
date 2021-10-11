@@ -1,12 +1,6 @@
-float 1_a;
-
-int 1_test_11711906_3(int 1_a, int 2_b {
-  char a = 'aaa';
-  float b = 02.02;
-
-  3_c = 01T;
-  if (a > b
-  {
-    return 1_a
-  }
+int test_1_r08()
+{
+  int a, bb
+  if (a > 4)
+    return bb;
 }
