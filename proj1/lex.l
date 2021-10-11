@@ -17,6 +17,7 @@
     }
 %}
 %option yylineno
+
 digit         [0-9]
 hexDigit     [0-9a-fA-F]
 letter        [A-Za-z]
@@ -24,7 +25,7 @@ _letter       [a-zA-Z_]
 
 hexChar '\\[xX]{hexDigit}{1,2}'
 
-fakeId     {digit}({letter}|_)({digit}|{letter}|_)*
+fakeId     {digit}+({letter}|_)({digit}|{letter}|_)*
 identifier ({letter}|_)({digit}|{letter}|_)*
 
 dec 0|[1-9]{digit}*
@@ -33,12 +34,13 @@ integer -?({dec}|{hex})
 frac \.{digit}+
 float -?{dec}{frac}
 char ('[ -~]')|{hexChar}
-fakeChar '\\[xX].+'
-fakeInt [0-9]+
+fakeChar '\\[xX].+'|'.{3,}'
+fakeInt -?0[0-9]+
+fakeFloat -?{digit}+\.{digit}+
 empty [ \n\r\t]
 
 %%
-"int"|"float"|"char" { yylval = init_node( "TYPE", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return TYPE; }
+"int"|"float"|"char" {yylval = init_node( "TYPE", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return TYPE; }
 "if"      { yylval = init_node( "IF", TERMINAL_WITHOUT_ATTRIBUTE, NULL, yylineno ); return IF; }
 "else"    { yylval = init_node( "ELSE", TERMINAL_WITHOUT_ATTRIBUTE, NULL, yylineno ); return ELSE; }
 "struct"  { yylval = init_node( "STRUCT", TERMINAL_WITHOUT_ATTRIBUTE, NULL, yylineno ); return STRUCT; }
@@ -82,7 +84,8 @@ empty [ \n\r\t]
 {char}       { yylval = init_node( "CHAR", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return CHAR; }
 
 {empty} {}
-.|{fakeId}|{fakeChar}|{fakeInt} {  lexical_error(yylineno,yytext); return FTOKEN;}
+{fakeId}  { lexical_error(yylineno,yytext); return FAKEID;}
+.|{fakeChar}|{fakeInt}|{fakeFloat} {lexical_error(yylineno,yytext); return FTOKEN;}
 
 %%
 

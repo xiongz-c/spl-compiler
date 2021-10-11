@@ -1,9 +1,12 @@
-int test_1_o01()
-{
-  int _wrong_hex_int_1 = 01;
-  int _wrong_hex_int_2 = 0xCS;
-  int _right_hex_int = 0xdeadbeef;
-  char _right_hex_char = '\xa0';
-  char _wrong_hex_char_1 = ' ';
-  char _wrong_hex_char_2 = '\x910';
+float 1_a;
+
+int 1_test_11711906_3(int 1_a, int 2_b {
+  char a = 'aaa';
+  float b = 02.02;
+
+  3_c = 01T;
+  if (a > b
+  {
+    return 1_a
+  }
 }
