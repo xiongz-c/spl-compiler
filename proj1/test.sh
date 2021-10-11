@@ -1,2 +1,2 @@
 make clean & make
-./bin/splc ./local_test.spl
+python3 test.py

@@ -10,7 +10,6 @@
     
     int yycolno = 1;
     int existError = 0;
-    void multiple_line();
     void lexical_error(int line, char * msg){
         printf("Error type A at Line %d: unknown lexeme %s\n",line,msg);
         existError = 1;
@@ -76,7 +75,6 @@ empty [ \n\r\t]
 
 "\n" { yycolno = 1; }
 "//" { char c; while((c=input()) != '\n'); }
-"/*" { multiple_line(); }
 
 {integer}    { yylval = init_node( "INT", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return INT; }
 {float}      { yylval = init_node( "FLOAT", TERMINAL_WITH_ATTRIBUTE, yytext, yylineno ); return FLOAT; }
@@ -88,23 +86,3 @@ empty [ \n\r\t]
 .|{fakeChar}|{fakeInt}|{fakeFloat} {lexical_error(yylineno,yytext); return FTOKEN;}
 
 %%
-
-
-void multiple_line() {
-    char c;
-    while(1)
-    {
-        switch(input()){
-        case '\0':
-            fprintf(stderr, "Unclosed comment\n");
-            exit(-1);
-        case '*':
-            if ((c = input()) == '/')
-                return;
-            unput(c);
-            break;
-        default:
-            break;
-        }
-    }
-}
