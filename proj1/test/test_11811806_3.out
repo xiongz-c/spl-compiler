@@ -1,0 +1,73 @@
+Program (1)
+  ExtDefList (1)
+    ExtDef (1)
+      Specifier (1)
+        StructSpecifier (1)
+          STRUCT
+          ID: s1
+          LC
+          DefList (2)
+            Def (2)
+              Specifier (2)
+                TYPE: int
+              DecList (2)
+                Dec (2)
+                  VarDec (2)
+                    ID: attr
+                  ASSIGN
+                  Exp (2)
+                    INT: 123
+              SEMI
+          RC
+      ExtDecList (3)
+        VarDec (3)
+          ID: s1
+      SEMI
+    ExtDefList (5)
+      ExtDef (5)
+        Specifier (5)
+          TYPE: int
+        FunDec (5)
+          ID: f002
+          LP
+          RP
+        CompSt (5)
+          LC
+          StmtList (6)
+            Stmt (6)
+              RETURN
+              Exp (6)
+                INT: 0
+              SEMI
+          RC
+      ExtDefList (9)
+        ExtDef (9)
+          Specifier (9)
+            TYPE: int
+          FunDec (9)
+            ID: test_xixixi
+            LP
+            RP
+          CompSt (9)
+            LC
+            DefList (10)
+              Def (10)
+                Specifier (10)
+                  TYPE: int
+                DecList (10)
+                  Dec (10)
+                    VarDec (10)
+                      ID: a
+                    ASSIGN
+                    Exp (10)
+                      ID: f002
+                      LP
+                      RP
+                SEMI
+            StmtList (11)
+              Stmt (11)
+                RETURN
+                Exp (11)
+                  INT: 0
+                SEMI
+            RC

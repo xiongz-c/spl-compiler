@@ -1,4 +1,3 @@
 bin/ 
 lex.yy.c 
 syntax.tab.*
-*.out

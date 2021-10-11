@@ -1,0 +1,12 @@
+struct s1 {
+    int attr = 123;
+} s1;
+
+int f002() {
+    return 0;
+}
+
+int test_xixixi() {
+    int a = f002();
+    return 0;
+}

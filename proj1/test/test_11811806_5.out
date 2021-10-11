@@ -1,0 +1,6 @@
+Error type A at Line 1: unknown lexeme 1_err
+Error type A at Line 3: unknown lexeme :
+Error type A at Line 4: unknown lexeme 0fxs
+Error type B at Line 4: Definition not match rules
+Error type B at Line 5: Definition not match rules
+Error type B at Line 6: Missing semicolon';'
