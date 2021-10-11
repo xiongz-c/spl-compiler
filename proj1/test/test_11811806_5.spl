@@ -1,7 +1,9 @@
-char 1_err;
-
-int -:)() {
-    float 0fxs = 2.0;
-    char 123 >= 2;
-    char a = 'c'
+int main(int 01arg, int 02arg{
+    int a > 10;
+    int b = 10 > 1;
+    if (a > b){
+        return a
+    } else{
+        return b;
+    }
 }

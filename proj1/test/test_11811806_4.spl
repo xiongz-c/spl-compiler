@@ -1,12 +1,6 @@
-struct foo1 {
-    int attr = ~;
-} s1, s2[3]
-
-int f002() {
-    return 0;
-}
-
-int test_() {
-    int a = f002);
-    return 0;
+int main({
+    if (a > b{
+        return a
+    } else{
+        return b;
 }

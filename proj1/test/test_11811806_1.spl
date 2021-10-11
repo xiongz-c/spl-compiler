@@ -1,4 +1,11 @@
-int pixiv(){
-    int x = 0XFfFfFfff;
-    int y = 0.0
-    return 0;
+int 0506var;
+char myChar;;
+
+int main(int _a, int 1_arg){
+  char hex = '\x888';
+  int leadingZero = -0099;
+  float wrongFloat = 00.00;
+  float validFloat = 0.0;
+  int validInt = 0x0;
+  return 0
+}

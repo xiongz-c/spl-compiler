@@ -1,6 +1,5 @@
-Error type A at Line 1: unknown lexeme 1_err
-Error type A at Line 3: unknown lexeme :
-Error type A at Line 4: unknown lexeme 0fxs
-Error type B at Line 4: Definition not match rules
-Error type B at Line 5: Definition not match rules
-Error type B at Line 6: Missing semicolon';'
+Error type A at Line 1: unknown lexeme 01arg
+Error type A at Line 1: unknown lexeme 02arg
+Error type B at Line 1: Missing closing parenthesis ')'
+Error type B at Line 2: Wrong Assign Operation
+Error type B at Line 5: Missing semicolon ';'

@@ -1,24 +1,5 @@
-Program (1)
-  ExtDefList (1)
-    ExtDef (1)
-      Specifier (1)
-        TYPE: int
-      FunDec (1)
-        ID: sustc
-        LP
-        RP
-      CompSt (1)
-        LC
-        DefList (2)
-          Def (2)
-            Specifier (2)
-              TYPE: int
-            DecList (2)
-              Dec (2)
-                VarDec (2)
-                  ID: a
-                ASSIGN
-                Exp (2)
-                  INT: 1000000000000000000000000
-            SEMI
-        RC
+Error type B at Line 3: Missing semicolon';'
+Error type B at Line 6: Missing '}'
+Error type B at Line 11: Missing ']'
+Error type A at Line 13: unknown lexeme 00_main_1
+Error type B at Line 14: Definition not match rules

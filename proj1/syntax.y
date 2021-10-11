@@ -9,21 +9,21 @@
     
     void yyerror(const char*);
 %}
-%token TYPE STRUCT IF ELSE WHILE FOR RETURN 
+%token TYPE STRUCT 
+%token IF ELSE WHILE FOR RETURN 
 %token LC RC SEMI COMMA 
 %token INT FLOAT CHAR ID FTOKEN 
-%token FAKEID
+%token FAKEID FAKEOP
 %nonassoc THEN 
 %nonassoc ELSE 
+%nonassoc FTOKEN 
 %right ASSIGN 
-%left OR 
-%left AND 
-%left LT LE GT GE EQ NE 
+%left OR AND LT LE GT GE EQ NE 
 %left PLUS MINUS 
 %left MUL DIV 
 %right NOT 
 %left LP RP LB RB DOT 
-%nonassoc FTOKEN 
+
 %%
 Program: ExtDefList { 
     root = $$ = init_node("Program", NON_TERMINAL, NULL, @$.first_line ); insert_children($$,1,$1);} 
@@ -39,6 +39,7 @@ ExtDef: Specifier ExtDecList SEMI { $$ = init_node("ExtDef", NON_TERMINAL, NULL,
         | Specifier FunDec CompSt { $$ = init_node("ExtDef", NON_TERMINAL, NULL, @$.first_line); 
                                     insert_children($$, 3, $1, $2, $3); }
         | Specifier ExtDecList error { syntax_error(@2.last_line , "Missing semicolon\';\'");}
+        | Specifier ExtDecList SEMI SEMI error { syntax_error(@2.last_line , "Multiple \';\'");}
         | Specifier error SEMI {syntax_error(@3.last_line , "Definition not match rules");}
         ;
 ExtDecList: VarDec { $$ = init_node("ExtDecList", NON_TERMINAL, NULL, @$.first_line); 
@@ -109,7 +110,7 @@ Stmt: Exp SEMI {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);}
         | WHILE LP Exp RP Stmt {  $$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);}
-        | FOR LP ForVarList RP Stmt { if(existError){$$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
+        | FOR LP ForVarList RP Stmt { {$$ = init_node("Stmt", NON_TERMINAL, NULL, @$.first_line);
                         insert_children($$, 5, $1, $2, $3, $4, $5);} }
         | IF LP Exp error Stmt ELSE Stmt  { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
         | IF LP Exp error Stmt %prec THEN { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
@@ -127,7 +128,7 @@ DefList: Def DefList {  $$ = init_node("DefList",NON_TERMINAL, NULL, @$.first_li
 Def: Specifier DecList SEMI {  $$ = init_node("Def",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 3, $1, $2, $3);}
         | Specifier DecList SEMI SEMI error {syntax_error(@1.first_line , "Multiple \';\'");}
-        | Specifier DecList error {syntax_error(@1.first_line , "Missing semicolon \';\'");}
+        | Specifier DecList error  {syntax_error(@1.first_line , "Missing semicolon \';\'");}
         ;
 DecList: Dec {  $$ = init_node("DecList",NON_TERMINAL, NULL, @$.first_line);
                       insert_children($$, 1, $1);}
@@ -196,6 +197,7 @@ Exp: Exp ASSIGN Exp {  $$ = init_node("Exp",NON_TERMINAL, NULL, @$.first_line);
         | FTOKEN error { existError = 1; }
         | FAKEID {existError = 1; }
         | Exp FTOKEN Exp error  { existError = 1; }
+        | Exp FAKEOP Exp error  { existError = 1; }
         | ID LP Args error { syntax_error(@1.first_line , "Missing closing parenthesis \')\'"); }
         ;
 ForVarList: DecList SEMI Exp SEMI Args  { $$ = init_node("ForVarList", NON_TERMINAL, NULL, @$.first_line);
@@ -218,10 +220,7 @@ int main(int argc, char **argv) {
         perror(argv[1]);
         exit(-1);
     }
-    //yydebug = 1;
     yyparse();
-    //printf("%s\n",root->children[0]->name);
     if(!existError)print_tree(root,0);
     return 0;
 }
-// make clean;make

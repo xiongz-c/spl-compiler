@@ -6,9 +6,10 @@
         yylloc.first_column = yycolno; \
         yylloc.last_line = yylineno; \
         yylloc.last_column = yycolno + yyleng; \
-        yycolno += yyleng;
+        yycolno += yyleng; \
     
     int yycolno = 1;
+
     int existError = 0;
     void lexical_error(int line, char * msg){
         printf("Error type A at Line %d: unknown lexeme %s\n",line,msg);
@@ -83,6 +84,7 @@ empty [ \n\r\t]
 
 {empty} {}
 {fakeId}  { lexical_error(yylineno,yytext); return FAKEID;}
-.|{fakeChar}|{fakeInt}|{fakeFloat} {lexical_error(yylineno,yytext); return FTOKEN;}
+"^"|"/="|"*="|"+="|"-=" {lexical_error(yylineno,yytext); return FAKEOP;}
+.|{fakeChar}|{fakeInt}|{fakeFloat} {lexical_error(yylineno,yytext);  return FTOKEN;}
 
 %%

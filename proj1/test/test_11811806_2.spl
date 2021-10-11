@@ -1,3 +1,16 @@
-int sustc(){
-    int a = 1000000000000000000000000;
+struct struct1 {
+    int attr = 10;
+}s1, s2[3]
+
+struct struct2 {
+    int arr[10];
+s1;
+
+struct struct3 {
+    int num = 1;
+}s1[10;
+
+int 00_main_1() {
+    int a = ;
+    return 0;
 }
