@@ -2,14 +2,13 @@ CC=gcc
 FLEX=flex
 BISON=bison
 
-
 .lex: lex.l
 	$(FLEX) lex.l
 .syntax: syntax.y
 	$(BISON) -t -d syntax.y -Wconflicts-sr
 splc: clean  .syntax .lex
 	@mkdir bin
-	g++  syntax.tab.c ast.hpp -lfl -ly -o bin/splc
+	g++ ast.c syntax.tab.c semantic.cpp -lfl -ly -o bin/splc
 	@chmod +x bin/splc
 gen:
 	$(FLEX) tmp.l

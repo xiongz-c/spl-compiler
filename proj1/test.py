@@ -1,7 +1,7 @@
 import os
 import filecmp
 
-test_dir = "./test"
+test_dir = "./test-sample"
 tmp_file = "tmp_test.out"
 splc = "./bin/splc"
 
