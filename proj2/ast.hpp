@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstdio>
 #include <cstdarg>
+#include <cstdlib>
+
 using namespace std;
 enum token_type{
     NON_TERMINAL,
@@ -46,6 +48,16 @@ public:
         }
         va_end(args);
     }
+
+    string printNode(){
+        string info = "";
+        info += ">> Node name : " + this->name + " | value: "+this->value +" | children num: " + to_string(this->children_num) + " ";
+        for (auto s : this->children){
+            info += " "+ s->name;
+        }
+        info += "\n";
+        return info;
+    }
 };
 
 void print_tree(ast_node *root, int height){
@@ -62,5 +74,6 @@ void print_tree(ast_node *root, int height){
     for (int i = 0 ; i < root->children_num ; i++){
         print_tree(root->children[i],height+1);
     }
+
 }
 
