@@ -20,8 +20,8 @@ unordered_map<int,string> error_info =
         {
                 {1,"undefined variable:"},
                 {2,"undefined function:"},
-                {3,"redefined variable:"},
-                {4,"redefined function:"},
+                {3,"redefine variable:"},
+                {4,"redefine function:"},
         };
 
 
@@ -228,7 +228,7 @@ void decEntry(ast_node* node, Type* spec_type){
     varDecEntry(node->children[0],spec_type);
     if(node->children_num == 3){
         Type* type = ExpressionEntry(node->children[2]);
-        cout << "fucking type : " << type->name << endl;
+        
     }
 }
 
@@ -251,16 +251,21 @@ Type* ExpressionEntry(ast_node* node){
         Type* type = new PrimitiveType(str_type);
         return type;
     }else if(node->children[0]->name == "Exp"){
+        D( cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
         Type* left_exp_type = ExpressionEntry(node->children[0]);
         D( cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
         if(node->children_num == 3 && node->children[1]->name == "ASSIGN"){
             Type* right_exp_type = ExpressionEntry(node->children[2]);
+
         }else if (node->children_num == 3 && (node->children[1]->name == "PLUS"
                                            || node->children[1]->name == "MINUS"
                                            || node->children[1]->name == "MUL"
                                            || node->children[1]->name == "DIV")){
             Type* right_exp_type = ExpressionEntry(node->children[2]);
+            cout << "fucking type : " << right_exp_type->name << endl;
+            cout << "fucking type2 : " << left_exp_type->name << endl;
         }
+
     }
     D( cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
 }
