@@ -1,0 +1,10 @@
+int g1;
+
+int func(int p1, float p2) {
+    return 0; 
+}
+
+int test_11711906_1() {
+    float v1 = 1.0;
+    return func(g1, v1) + 2.0;
+} 

@@ -1,0 +1,18 @@
+struct Attr {
+    int a1;
+};
+
+struct Demo {
+    struct Attr d1;
+    int d2[5]; 
+} v1, v2[5];
+
+float test_11711906_7(int i) {
+    struct Attr v3 = v2[0].d1;
+    v3.a1  = i;
+    while(i > 0) {
+        int v4[5] = v1.d2;
+        v3.a1 = v3.a1 + i;
+    }
+    return v2[0].d2[0] + 1.5;
+}
