@@ -33,7 +33,8 @@ unordered_map<int,string> error_info =
                 {12,"indexing by non-integer"},
                 {13,"accessing with non-struct variable"},
                 {14,"no such member"},
-                {15,"redefine struct"}
+                {15,"redefine struct"},
+                {16,"only int can do boolean operation"}
         };
 
 
@@ -89,6 +90,7 @@ public:
     }
     StructureType(vector<Type*>* vec){
         for(int i = 0 ; i < vec->size() ; i++){
+            //cout << "Testing pushing : " << (*vec)[i]->filed_name << endl;
             fields.push_back((*vec)[i]);
         }
         field_size= vec->size();
@@ -219,7 +221,7 @@ Type* ExpressionEntry(ast_node*);
 void stmtListEntry(ast_node*,string);
 void stmtEntry(ast_node* node,string);
 void argsEntry(ast_node* node, vector<Type*>* args);
-
+void extDecList(ast_node* node, Type* type);
 void reportError(int type,int line_num,string diy){
     cout << "Error type " << type << " at Line " << line_num <<": " << error_info[type] << diy <<endl;
 }
@@ -227,6 +229,8 @@ void reportError(int type,int line_num,string diy){
 void semanticEntry(ast_node* root){
     if (root->children_num <= 0 )return;
     D(cerr << ">> root children size : " <<root->children.size() << endl;)
+    D( cerr << "lineno: " << __LINE__ << " " << root->printNode() << endl;)
+
     extDefListEntry(root->children[0]);
     //extDefListEntry(root->children[0]);
 }
@@ -253,7 +257,16 @@ void extDefEntry(ast_node* node){
                 symbolTable.scope--;
             }
             if(access)compStEntry(node->children[2],child->children[0]->value);
+        }else if(child->name == "ExtDecList"){
+            extDecList(child,spec_type);
         }
+    }
+}
+
+void extDecList(ast_node* node, Type* type){
+    varDecEntry(node->children[0],type);
+    if(node->children_num > 2){
+        extDecList(node->children[2],type);
     }
 }
 
@@ -477,7 +490,21 @@ Type* ExpressionEntry(ast_node* node){
             }else{
                 return nullptr;
             }
-        }else if(node->children_num == 3 && node->children[1]->name == "DOT"){
+        }
+        else if(node->children[1]->name == "AND" || node->children[1]->name == "OR"){
+            Type* right_exp_type = ExpressionEntry(node->children[2]);
+            if(left_exp_type != nullptr && right_exp_type != nullptr){
+                if(left_exp_type->name != "Primitive_int" || right_exp_type->name != "Primitive_int"){
+                    reportError(16,node->line_num,"");
+                    return nullptr;
+                }else{
+                    return new PrimitiveType("int");
+                }
+            }else{
+                return nullptr;
+            }
+        }
+        else if(node->children_num == 3 && node->children[1]->name == "DOT"){
             if(left_exp_type != nullptr){
                 string co_array = "Array";
                 StructureType * stType;
@@ -496,6 +523,7 @@ Type* ExpressionEntry(ast_node* node){
                     stType = dynamic_cast<StructureType*>(left_exp_type);
                 }
                 Type * rt_type = nullptr;
+
                 for(int i = 0; i < stType->field_size ; i++){
                     if(stType->fields[i]->filed_name == node->children[2]->value){
                         rt_type = stType->fields[i];
@@ -508,8 +536,6 @@ Type* ExpressionEntry(ast_node* node){
                 }
                 rt_type->lVal = 1;
                 return rt_type;
-            }else{
-                cout << "fucking" << endl;
             }
             return nullptr;
         }else if(node->children_num == 4 && node->children[1]->name == "LB"){
@@ -637,6 +663,7 @@ Type* paramDecEntry(ast_node* node){
 
 Type* varDecEntry(ast_node* node, Type* spec_type){
     if(node->children_num <= 0)return nullptr;
+    D( cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
     if(node->children[0]->name == "ID"){
         string co_array = "Array";
         pair<string, SymbolElement*> info = createTableInfo(node->children[0],spec_type,"VAR", nullptr);
@@ -647,7 +674,6 @@ Type* varDecEntry(ast_node* node, Type* spec_type){
         spec_type->filed_name = node->children[0]->value;
         return spec_type;
     }else if(node->children[0]->name == "VarDec" && node->children_num == 4){
-        //TODO solve array
         Type * array_type = new ArrayType(spec_type,atoi(node->children[2]->value.c_str()));
         D( cerr << "lineno: " << __LINE__ << " " << node->children_num << endl;)
         return varDecEntry(node->children[0],array_type);
