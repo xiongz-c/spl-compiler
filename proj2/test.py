@@ -1,7 +1,7 @@
 import os
 import filecmp
 
-test_dir = "./test"
+test_dir = "./test-sample"
 tmp_file = "tmp_test.out"
 splc = "./bin/splc"
 
@@ -22,6 +22,6 @@ for path, dir_list, file_list in g:
                 else:
                     print(f'failed test: {pix}')
             except IOError:
-                print('Error: {splc} output not found')
+                print(f'Error: {splc} output not found')
 
             
