@@ -30,13 +30,13 @@ identifier ({letter}|_)({digit}|{letter}|_)*
 
 dec 0|[1-9]{digit}*
 hex 0[xX](0|[1-9a-fA-F]{hexDigit}*)
-integer -?({dec}|{hex})
+integer ({dec}|{hex})
 frac \.{digit}+
-float -?{dec}{frac}
+float {dec}{frac}
 char ('[ -~]')|{hexChar}
 fakeChar '\\[xX].+'|'.{3,}'
-fakeInt -?0[0-9]+
-fakeFloat -?{digit}+\.{digit}+
+fakeInt 0[0-9]+
+fakeFloat {digit}+\.{digit}+
 empty [ \n\r\t]
 
 %%

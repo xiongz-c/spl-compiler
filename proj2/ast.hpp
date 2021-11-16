@@ -27,6 +27,7 @@ public:
         this->value = _value;
         this->line_num = _line_num;
         this->children_num = 0;
+        //cout << "ast node name : " << _name << endl;
         if( _name =="INT" && _value.size() > 2 &&
             ( _value[1] == 'x' || _value[2] == 'x' || _value[1] == 'X' || _value[2] == 'X') )
         {
