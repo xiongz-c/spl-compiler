@@ -1,0 +1,16 @@
+struct Demo {
+    float m1;
+}g1[2][3];
+
+struct Demo {};
+
+int test_11711906_3(int v1, float v2) {
+    int v1 = 2;
+    int v3;
+
+    v2 =  v3.m1;
+    g1[0][0].m1 = v2;
+
+    return test_11711906_3(0, 1.0);
+}
+

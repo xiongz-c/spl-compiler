@@ -1,0 +1,18 @@
+struct Demo {
+    int m1;
+};
+
+int func(struct Demo p1, int p2) {
+    return p1.m1 + p2;
+}
+
+int func() {}
+
+int test_11711906_4(int v1) {
+    struct Demo v2;
+    v2.m1 = v1;
+
+    v2+1 = func2();
+
+    return func(v2, 1.0);
+}
