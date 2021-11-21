@@ -1,19 +1,18 @@
-struct Attr {};
-
-struct Demo {
-    int m1[2];
-    struct Attr m2;
-} v1, v2[2];
-
-int test_11811905_2() {
-    float v3 = 1.0;
-    int v4[3][2];
-    struct Attr v5;
-
-    v1.m1[0] = v3;
-    v1.m1 = v4[2];
-    v2[0].m2 = v5;
-    v2[0].m3 = v6;
-
-    return 0;
+struct Person
+{
+  int name;
+  int friends[10];
+}; 
+int test_2_r10()
+{
+  struct Person tom;
+  struct Person people[10];
+  int i = 0;
+  while (i < 10)
+  {
+    people[i].name = i;
+    tom.friends[i] = i;
+    i = i + 1;
+  }
+  return tom.name[i-1];
 }
