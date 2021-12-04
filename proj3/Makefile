@@ -9,11 +9,11 @@ BISON=bison
 	$(BISON) -t -d syntax.y -Wconflicts-sr
 splc: clean  .syntax .lex
 	@mkdir bin
-	$(G++) ast.hpp syntax.tab.c semantic.hpp -lfl -ly -o bin/splc
+	$(G++) ast.hpp syntax.tab.c semantic.hpp tac.hpp -lfl -ly -o bin/splc
 	@chmod +x bin/splc
 debug: clean  .syntax .lex
 	@mkdir bin
-	$(G++) ast.hpp syntax.tab.c semantic.hpp -D DEBUG -lfl -ly -o bin/splc
+	$(G++) ast.hpp syntax.tab.c semantic.hpp tac.hpp -D DEBUG -lfl -ly -o bin/splc
 	@chmod +x bin/splc
 gen:
 	$(FLEX) tmp.l
