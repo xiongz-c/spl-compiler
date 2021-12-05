@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
     if(!existError){
     //print_tree(root,0);
     semanticEntry(root);
-    irGen(root)
+    ir_starter(root)
     }
     return 0;
 }

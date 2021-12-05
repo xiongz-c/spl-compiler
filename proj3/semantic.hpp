@@ -105,6 +105,10 @@ public:
         this->name = "Structure";
     }
 
+    StructureType() {
+        this->name = "Structure";
+    }
+
 };
 
 class SymbolElement {
