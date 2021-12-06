@@ -11,6 +11,10 @@ int tmp_cnt, var_cnt, label_cnt;
 string Tmp(){return "t" + to_string(++tmp_cnt);}
 string Var(){return "v" + to_string(++var_cnt);}
 string Label(){return "label" + to_string(++label_cnt);}
+int *genlist(int id){
+    int *label = new int(id);
+    return label;
+}
 string remove_tmp(){tmp_cnt--}
 float str_to_num(string value, bool type){
     if (!type) // DEFAULT: parse to int when false
@@ -118,15 +122,17 @@ public:
         }
     }
 
-    virtual int append_self() {
-        tac_vector.push_back(tac);
-        return tac_vector.size() - 1;
-    }
-
+    int append_self();
 };
 
 vector<Tac*> tac_vector;
-unordered_map<string, int> ir_table; //
+unordered_map<string, int> ir_table;
+vector<int> cont, br;
+
+int Tac::append_self() {
+    tac_vector.push_back(this);
+    return tac_vector.size() - 1;
+}
 
 int append_tac(Tac *tac) {
     tac_vector.push_back(tac);
@@ -145,6 +151,8 @@ int get_ir(string name){return ir_table[name];}
 void ir_init() {
     tac_vector.clear();
     ir_table.clear();
+    cont.clear();
+    br.clear();
 }
 
 /**
@@ -170,6 +178,8 @@ int ir_exp(ast_node *node, bool single=false);
 void ir_var_list(ast_node *node);
 void ir_param_dec(ast_node *node);
 vector<int> ir_args(ast_node *node);
+void translate_cond_exp(ast_node *exp, string lb_t, string lb_f);
+void translate_exp(ast_node *exp, string& place);
 
 /**
  * Program: ExtDefList
@@ -218,32 +228,34 @@ void ir_ext_dec_list(ast_node *node, Type *type){
 /**
  * Specifier: TYPE
  * Specifier: StructSpecifier
-*/
-Type *ir_specifier(ast_node *node){
-
-}
-
-Type *ir_type(ast_node *node){
-    return typeEntry(node)
-}
-
-/**
  * StructSpecifier: STRUCT ID LC DefList RC
  * StructSpecifier: STRUCT ID
- */
-Type *ir_struct_specifier(ast_node *node){
-
+*/
+Type *ir_specifier(ast_node *node){
+    Type *type;
+    if(node->children[0]->name.compare("TYPE") == 0){
+        type = typeEntry(node->children[0]);
+    }else{
+        type = structSpecifierEntry(node->children[0]);
+    }
+    return type;
 }
 
 void ir_func(ast_node *node, Type *type){
-
+    string name = node->children[0]->value;
+    int func_id = append_tac(new Tac(Tac::FUNC, "FUNCTION", name));
+    put_ir(name, func_id);
+    if (node->children[2]->name.compare("VarList") == 0) {
+        ir_var_list(node->children[2]);
+    }
 }
 
 /**
  * CompSt: LC DefList StmtList RC
 */
 void ir_comp_stmt(ast_node *node){
-
+    ir_def_list(node->children[1]);
+    ir_stmt_list(node->children[2]);
 }
 
 /**
@@ -251,21 +263,29 @@ void ir_comp_stmt(ast_node *node){
  * DefList: %empty
  */
 void ir_def_list(ast_node *node){
-
+    while(node->children_num){
+        ir_def(node->children[0]);
+        node = node->children[1];
+    }
 }
 
 /**
  * Specifier DecList SEMI
  */
 void ir_def(ast_node *node){
-
+    Type *type = ir_specifier(node->children[0]);
+    ir_dec_list(node->children[1], type);
 }
 
 /**
  * DecList: Dec | Dec COMMA DecList
 */
 void ir_dec_list(ast_node *node, Type *type){
-
+    ir_dec(node->children[0], type);
+    while(node->children_num > 1){
+        node = node->children[2];
+        ir_dec(node->children[0], type);
+    }
 }
 
 /**
@@ -273,7 +293,10 @@ void ir_dec_list(ast_node *node, Type *type){
  * StmtList: %empty
  */
 void ir_stmt_list(ast_node *node){
-
+    while(node->children_num){
+        ir_stmt(node->children[0]);
+        node = node->children[1];
+    }
 }
 
 /**
@@ -285,8 +308,97 @@ void ir_stmt_list(ast_node *node){
  * Stmt: WHILE LP Exp RP Stmt
  * WRITE LP Exp RP SEMI
  */
-void ir_stmt(ast_node *node){
 
+void ir_stmt(ast_node *node){
+        // Exp SEMI
+    if(node->children[0]->name.compare("Exp") == 0){
+        ir_exp(node->children[0]);
+    }
+        // CompSt
+    else if(node->children[0]->name.compare("CompSt") == 0){
+        ir_comp_stmt(node->child[0]);
+    }
+        // RETURN Exp SEMI
+    else if(node->children[0]->name.compare("RETURN") == 0){
+        int exp_id = ir_exp(node->children[1]);
+        append_tac(new Tac(Tac::RETURN, "RETURN", val2str(exp_id)));
+    }
+        // IF
+    else if(node->children[0]->name.compare("IF") == 0){
+        string lb1 = Label();
+        string lb2 = Label();
+        int exp_id = ir_exp(node->children[2]);
+        int tbranch = append_tac(new Tac(Tac::LABEL, "LABEL", lb1));
+        ir_stmt(node->children[4]);
+
+        if(node->children_num < 6){
+            int fbranch = append_tac(new Tac(Tac::GOTO, "GOTO", lb2));
+            if_stmt(expid, tbranch, fbranch);
+        }else {
+            string lb3 = Label();
+            jbranch = append_tac(new Tac(Tac::GOTO, "GOTO", lb3));
+            append_tac(new Tac(Tac::LABEL, "LABEL", lb2));
+            ir_stmt(node->child[6]);
+            append_tac(new Tac(Tac::LABEL, "LABEL", lb3));
+        }
+    }
+        // WHILE LP Exp RP Stmt
+    else if(node->child[0]->type_name.compare("WHILE") == 0){
+        string lb1 = Label();
+        string lb2 = Label();
+        string lb3 = Label();
+
+        append_tac(new Tac(Tac::LABEL, "LABEL", lb1));
+
+
+        append_tac(new Tac(Tac::LABEL, "LABEL", lb2));
+        ir_stmt(node->children[4]);
+        append_tac(new Tac(Tac::GOTO, "GOTO", lb1));
+        append_tac(new Tac(Tac::LABEL, "LABEL", lb3));
+
+    }
+        // WRITE LP Exp RP SEMI
+    else if (node->child[0]->type_name.compare("WRITE") == 0) {
+        int id = irExp(node->child[2]);
+        genid(new WriteTAC(tac_vector.size(), id));
+    } else {
+        assert(NULL);
+    }
+}
+
+void translate_exp(ast_node *exp, string& place) {
+    // todo 这个函数的作用是把place修改string的格式，看看如何替代
+}
+
+void translate_cond_exp(ast_node *exp, string lb_t, string lb_f){
+    ast_node *child = exp->children[0];
+    if (child->name == "EXP") {
+        string sname = exp->children[1]->name;
+        if (sname == "AND") {
+            string lb1 = Label();
+            translate_cond_exp(exp->children[0], lb1, lb_f);
+            append_tac(new Tac(Tac::LABEL, "LABEL", lb1));
+            translate_cond_exp(exp->children[2], lb_t, lb_f)
+        } else if (sname == "OR") {
+            string lb1 = Label();
+            translate_cond_exp(exp->children[0], lb_t, lb_1);
+            append_tac(new Tac(Tac::LABEL, "LABEL", lb1));
+            translate_cond_exp(exp->children[2], lb_t, lb_f)
+        } else {
+            string t1 = Tmp();
+            translate_exp(exp->children[2], t1);
+
+            string t2 = Tmp();
+            translate_exp(exp->children[2], t2);
+
+            append_tac(new Tac(Tac::IF, exp->children[1]->value, t1, t2, lb_t));
+            append_tac(new Tac(Tac::GOTO, "GOTO", lb_f));
+        }
+    } else if (child->name == "NOT") {
+        translate_cond_Exp(exp->children[1], lb_f, lb_t);
+    } else if (child->name == "LP") {
+        translate_cond_exp(exp->children[1], lb_t, lb_f);
+    }
 }
 
 /**
@@ -294,7 +406,15 @@ void ir_stmt(ast_node *node){
  * Dec: VarDec ASSIGN Exp
  */
 void ir_dec(ast_node *node, Type *type){
-
+    int exp_id = 0;
+    if(node->children_num > 1){
+        exp_id = ir_exp(node->children[2]);
+    }
+    Tac *tac = ir_var_dec(node->children[0], type);
+    if(exp_id){
+        tac->operands[ARG1] = val2str(exp_id);
+    }
+    put_ir(tac->operands[RESULT], tac->append_self());
 }
 
 /**
@@ -323,7 +443,7 @@ Tac* ir_var_dec(ast_node *node, Type* type){
     if (int_vector.size()) { // array
         return new Tac(Tac::DEC, Var(), int_vector);
     } else if (equalType(type, new StructureType())) { // structure
-        return new Tac(Tac::DEC, Var(), {});
+        return new Tac(Tac::DEC, Var(), vector<int>{});
     } else {
         return new Tac(Tac::ASSIGN,"ASSIGN", val2str(0).c_str(), Var());
     }
