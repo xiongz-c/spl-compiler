@@ -1,5 +1,5 @@
 #include "semantic.hpp"
-
+#include "list"
 #define ARG1 0
 #define ARG2 1
 #define RESULT 2
@@ -15,12 +15,12 @@ int *genlist(int id){
     int *label = new int(id);
     return label;
 }
-string remove_tmp(){tmp_cnt--;}
+void remove_tmp(){tmp_cnt--;}
 float str_to_num(string value, bool type){
     if (!type) // DEFAULT: parse to int when false
-        atoi(value.c_str());
+        return atoi(value.c_str());
     else // else parse to float
-        atof(value.c_str());
+        return atof(value.c_str());
 }
 string val2str(int num) {
     if (num > 0) {
@@ -154,7 +154,7 @@ string Tac::append_self() {
 string append_tac(Tac *tac) {
     tac_vector.push_back(tac);
     if (tac->tac_type == Tac::FUNC) return std::to_string(tac_vector.size() - 1);
-    return tac->operands[RESULT]
+    return tac->operands[RESULT];
 }
 
 void ir_generate() {
@@ -368,12 +368,12 @@ void ir_stmt(ast_node *node){
             string lb3 = Label();
             append_tac(new Tac(Tac::GOTO, "GOTO", lb3));
             append_tac(new Tac(Tac::LABEL, "LABEL", lb2));
-            ir_stmt(node->child[6]);
+            ir_stmt(node->children[6]);
             append_tac(new Tac(Tac::LABEL, "LABEL", lb3));
         }
     }
         // WHILE LP Exp RP Stmt
-    else if(node->child[0]->type_name.compare("WHILE") == 0){
+    else if(node->children[0]->type_name.compare("WHILE") == 0){
         string lb1 = Label();
         string lb2 = Label();
         string lb3 = Label();
@@ -386,8 +386,6 @@ void ir_stmt(ast_node *node){
         append_tac(new Tac(Tac::GOTO, "GOTO", lb1));
         append_tac(new Tac(Tac::LABEL, "LABEL", lb3));
 
-    } else {
-        assert(NULL);
     }
 }
 
@@ -510,7 +508,7 @@ void translate_exp(ast_node *exp, string& place) {
 
             Type* base = ExpressionEntry(exp);
             string t3 = Tmp();
-            append_tac(new Tac(Tac::ARITH, "*", t2, "#" + to_string(base->typeSize()), t3));
+            append_tac(new Tac(Tac::ARITH, "*", t2, "#" + to_string(base->type_size()), t3));
 
             if (typeid(base) == typeid(ArrayType)) {
                 append_tac(new Tac(Tac::ARITH, "+", t1, t3, place));
@@ -551,13 +549,12 @@ void translate_cond_exp(ast_node *exp, string lb_t, string lb_f){
             string lb1 = Label();
             translate_cond_exp(exp->children[0], lb1, lb_f);
             append_tac(new Tac(Tac::LABEL, "LABEL", lb1));
-            translate_cond_exp(exp->children[2], lb_t, lb_f)
+            translate_cond_exp(exp->children[2], lb_t, lb_f);
         } else if (sname == "OR") {
             string lb1 = Label();
-            string lb1 = Label();
-            translate_cond_exp(exp->children[0], lb_t, lb_1);
+            translate_cond_exp(exp->children[0], lb_t, lb1);
             append_tac(new Tac(Tac::LABEL, "LABEL", lb1));
-            translate_cond_exp(exp->children[2], lb_t, lb_f)
+            translate_cond_exp(exp->children[2], lb_t, lb_f);
         } else {
             string t1 = Tmp();
             translate_exp(exp->children[2], t1);
@@ -569,7 +566,7 @@ void translate_cond_exp(ast_node *exp, string lb_t, string lb_f){
             append_tac(new Tac(Tac::GOTO, "GOTO", lb_f));
         }
     } else if (child->name == "NOT") {
-        translate_cond_Exp(exp->children[1], lb_f, lb_t);
+        translate_cond_exp(exp->children[1], lb_f, lb_t);
     } else if (child->name == "LP") {
         translate_cond_exp(exp->children[1], lb_t, lb_f);
     }
@@ -649,6 +646,6 @@ void ir_var_list(ast_node *node){
 void ir_param_dec(ast_node *node){
     Type *type = ir_specifier(node->children[0]);
     Tac *tac = ir_var_dec(node->children[1], type);
-    tac->type = Tac::PARAM;
-    put_ir(tac->operands[ARG2], tac);
+    tac->tac_type = Tac::PARAM;
+    put_ir(tac->operands[ARG2], append_tac(tac));
 }
