@@ -485,7 +485,8 @@ void translate_exp(ast_node *exp, string& place) {
             translate_exp(exp->children[0], t1);
 
             Type* ttype = ExpressionEntry(exp->children[0]);
-            int offset = *(dynamic_cast<StructureType &>ttype->structure_offset(exp->children[2]->value);
+
+            int offset = dynamic_cast<StructureType *>(ttype)->structure_offset(exp->children[2]->value);
 
             if (ttype->is_refer) {
                 string t2 = Tmp();

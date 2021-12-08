@@ -128,8 +128,8 @@ public:
 
     int structure_offset(string member){
         int offset = 0;
-        for (int i = 0; i < fields->size(); ++i) {
-            Type* field = fields->at(i);
+        for (int i = 0; i < fields.size(); ++i) {
+            Type* field = fields[i];
             if (field->name == member)
                 break;
             offset += field->type_size();
@@ -139,7 +139,7 @@ public:
 
     int type_size() {
         int count = 0;
-        for (auto itr = fields->begin(); itr != fields->end(); ++itr)
+        for (auto itr = fields.begin(); itr != fields.end(); ++itr)
             count += (*itr)->type_size();
         return count;
     }
