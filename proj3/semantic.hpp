@@ -680,8 +680,6 @@ Type *ExpressionEntry(ast_node *node) {
             }
             return createEmptyType(1);
         } else if (node->children == 4 && node->children[0]->name == "READ") {
-            assert(node->child[1]->type_name.compare("LP") == 0);
-            assert(node->child[2]->type_name.compare("RP") == 0);
             return new PrimitiveType(PrimitiveType::INT);
         }
 
