@@ -18,9 +18,6 @@
 %nonassoc ELSE
 %nonassoc FTOKEN
 
-// project3
-%token WRITE READ
-
 %right ASSIGN
 %left OR AND LT LE GT GE EQ NE
 %left PLUS MINUS
@@ -116,8 +113,6 @@ Stmt: Exp SEMI {  $$ = new ast_node("Stmt", NON_TERMINAL, "", @$.first_line);
                         $$->insert_children( 5, $1, $2, $3, $4, $5);}
         | FOR LP ForVarList RP Stmt { $$ = new ast_node("Stmt", NON_TERMINAL, "", @$.first_line);
                         $$->insert_children( 5, $1, $2, $3, $4, $5); }
-        | WRITE LP Exp RP SEMI {$$ = new ast_node("Stmt", NON_TERMINAL, "", @$.first_line);
-                        $$->insert_children( 5, $1, $2, $3, $4, $5); }
         | IF LP Exp error Stmt ELSE Stmt  { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
         | IF LP Exp error Stmt %prec THEN { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
         | RETURN Exp error { syntax_error(@1.first_line , "Missing semicolon \';\'");}
@@ -201,8 +196,6 @@ Exp: Exp ASSIGN Exp {  $$ = new ast_node("Exp",NON_TERMINAL, "", @$.first_line);
                       $$->insert_children( 1, $1);}
         | CHAR {  $$ = new ast_node("Exp", NON_TERMINAL, "", @$.first_line);
                       $$->insert_children( 1, $1);}
-        | READ LP RP {$$ = new ast_node("Exp", NON_TERMINAL, "", @$.first_line);
-                      $$->insert_children( 3, $1, $2, $3 );}
         | FTOKEN error { existError = 1; }
         | FAKEID {existError = 1; }
         | Exp FTOKEN Exp error  { existError = 1; }

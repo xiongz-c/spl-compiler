@@ -39,6 +39,7 @@ unordered_map<int, string> error_info =
         };
 
 bool error_flag;
+
 /*
  *=======================
  *=== Type declaration===
@@ -61,10 +62,12 @@ public:
     }
 
     virtual ~Type() = default;
+
     int type_size() {
         return 0;
     }
-    void set_refer(){
+
+    void set_refer() {
         is_refer = true;
     }
 };
@@ -86,6 +89,7 @@ public:
             this->primitive = CHAR;
         }
     }
+
     int type_size() {
         return 4;
     }
@@ -128,10 +132,10 @@ public:
         this->name = "Structure";
     }
 
-    int structure_offset(string member){
+    int structure_offset(string member) {
         int offset = 0;
         for (int i = 0; i < fields.size(); ++i) {
-            Type* field = fields[i];
+            Type *field = fields[i];
             if (field->name == member)
                 break;
             offset += field->type_size();
@@ -234,7 +238,8 @@ public:
         auto it = this->symbolTableInstance.begin();
         cout << "===========================" << endl;
         while (it != this->symbolTableInstance.end()) {
-            cout << " ID : " << it->first << "   " << it->second->type->name << "scope : " << it->second->scope_num  << endl;
+            cout << " ID : " << it->first << "   " << it->second->type->name << "scope : " << it->second->scope_num
+                 << endl;
 //            if (it->first == "STRUCT_Demo") {
 //                StructureType *tmp_st = dynamic_cast<StructureType *>(it->second->type);
 //                cout << "    Demo Detail:" << endl;
@@ -250,7 +255,7 @@ public:
     void flushTable() {
         auto it = this->symbolTableInstance.begin();
         while (it != this->symbolTableInstance.end()) {
-            if (it->second->scope_num == this->scope && it->first.substr(0,4) != "FUNC") {
+            if (it->second->scope_num == this->scope && it->first.substr(0, 4) != "FUNC") {
                 this->symbolTableInstance.erase(it++);
             } else {
                 it++;
@@ -321,10 +326,10 @@ void reportError(int type, int line_num, string diy) {
     cout << "Error type " << type << " at Line " << line_num << ": " << error_info[type] << diy << endl;
 }
 
-bool equalType(Type* left, Type* right){
-    if(left->name == right->name){
+bool equalType(Type *left, Type *right) {
+    if (left->name == right->name) {
         return true;
-    }else{
+    } else {
         return false;
     }
 }
@@ -339,8 +344,8 @@ bool equalType(Type* left, Type* right){
 //    return dynamic_cast<PrimitiveType*>(begin_type->base);
 //}
 
-Type* createEmptyType(int lVal){
-    Type * empty = new Type();
+Type *createEmptyType(int lVal) {
+    Type *empty = new Type();
     empty->name = "INVALID";
     empty->lVal = lVal;
     return empty;
@@ -374,6 +379,13 @@ bool semanticEntry(ast_node *root) {
     if (root->children_num <= 0)return true;
     D(cerr << ">> root children size : " << root->children.size() << endl;)
     D(cerr << "lineno: " << __LINE__ << " " << root->printNode() << endl;)
+
+    SymbolElement *readEntry = new SymbolElement("", new PrimitiveType("int"), 0, 0, "FUNC", {});
+    symbolTable.insertEntry("FUNC_read", readEntry);
+
+    SymbolElement *writeEntry = new SymbolElement("", nullptr, 0, 0, "FUNC", {new PrimitiveType("int")});
+    symbolTable.insertEntry("FUNC_write", writeEntry);
+
     extDefListEntry(root->children[0]);
     return error_flag;
 }
@@ -461,8 +473,6 @@ void stmtEntry(ast_node *node, string func_id) {
     } else if (node->children_num == 5 && node->children[0]->name == "WHILE") {
         Type *type = ExpressionEntry(node->children[2]);
         stmtEntry(node->children[4], func_id);
-    }else if (node->children[0]->name == "WRITE") {
-        return;
     }
 }
 
@@ -515,12 +525,13 @@ Type *checkFunc(ast_node *node, vector<Type *> *args) {
     if (args != nullptr) {
         if (info_FUNC->args.size() != args->size()) {
             reportError(9, node->line_num,
-                        "argument number for compare, expect " + to_string(info_FUNC->args.size()) + ", got " + to_string(args->size()));
-        }else{
-            for(int i = 0; i < args->size() ; i++){
-                if(!equalType((*args)[i],info_FUNC->args[i])){
+                        "argument number for compare, expect " + to_string(info_FUNC->args.size()) + ", got " +
+                        to_string(args->size()));
+        } else {
+            for (int i = 0; i < args->size(); i++) {
+                if (!equalType((*args)[i], info_FUNC->args[i])) {
                     reportError(9, node->line_num,
-                                "argument type for compare in function "+node->value);
+                                "argument type for compare in function " + node->value);
                     break;
                 }
             }
@@ -557,14 +568,14 @@ Type *ExpressionEntry(ast_node *node) {
         Type *left_exp_type = ExpressionEntry(node->children[0]);
         if (node->children_num == 3 && node->children[1]->name == "ASSIGN") {
             Type *right_exp_type = ExpressionEntry(node->children[2]);
-            if(left_exp_type->lVal == 0){
+            if (left_exp_type->lVal == 0) {
                 reportError(6, node->children[0]->line_num, "");
             }
             int invalid_cnt = 0;
-            if(left_exp_type->name == "INVALID") invalid_cnt++;
-            if(right_exp_type->name == "INVALID") invalid_cnt++;
-            if(invalid_cnt >= 1){
-                if(invalid_cnt == 1){
+            if (left_exp_type->name == "INVALID") invalid_cnt++;
+            if (right_exp_type->name == "INVALID") invalid_cnt++;
+            if (invalid_cnt >= 1) {
+                if (invalid_cnt == 1) {
                     reportError(5, node->line_num, "");
                 }
                 return createEmptyType(0);
@@ -574,10 +585,10 @@ Type *ExpressionEntry(ast_node *node) {
                 string co_array = "Array";
                 string namel = left_exp_type->name;
                 string namer = right_exp_type->name;
-                if(namel.compare(0, co_array.size(), co_array) == 0){
+                if (namel.compare(0, co_array.size(), co_array) == 0) {
                     namel = namel.substr(6);
                 }
-                if(namer.compare(0, co_array.size(), co_array) == 0){
+                if (namer.compare(0, co_array.size(), co_array) == 0) {
                     namer = namer.substr(6);
                 }
                 if (namel != namer) {
@@ -648,7 +659,7 @@ Type *ExpressionEntry(ast_node *node) {
                 string co_array = "Array";
                 StructureType *stType;
                 string lname = left_exp_type->name;
-                while(lname.compare(0, co_array.size(), co_array) == 0){
+                while (lname.compare(0, co_array.size(), co_array) == 0) {
                     lname = lname.substr(6);
                 }
                 if (lname != "Structure") {
@@ -657,10 +668,10 @@ Type *ExpressionEntry(ast_node *node) {
                 }
                 lname = left_exp_type->name;
                 ArrayType *tmp_array_po;
-                Type* tmp_type = left_exp_type;
-                while(lname.compare(0, co_array.size(), co_array) == 0){
+                Type *tmp_type = left_exp_type;
+                while (lname.compare(0, co_array.size(), co_array) == 0) {
                     lname = lname.substr(6);
-                    tmp_array_po = dynamic_cast<ArrayType* >(tmp_type);
+                    tmp_array_po = dynamic_cast<ArrayType * >(tmp_type);
                     tmp_type = tmp_array_po->base;
                 }
                 stType = dynamic_cast<StructureType *>(tmp_type);
@@ -679,17 +690,13 @@ Type *ExpressionEntry(ast_node *node) {
                 return rt_type;
             }
             return createEmptyType(1);
-        } else if (node->children_num == 4 && node->children[0]->name == "READ") {
-            return new PrimitiveType("int");
-        }
-
-        else if (node->children_num == 4 && node->children[1]->name == "LB") {
-            if( left_exp_type->name != "INVALID" && dynamic_cast<ArrayType*>(left_exp_type) == nullptr){
+        } else if (node->children_num == 4 && node->children[1]->name == "LB") {
+            if (left_exp_type->name != "INVALID" && dynamic_cast<ArrayType *>(left_exp_type) == nullptr) {
                 reportError(10, node->line_num, "");
                 return createEmptyType(1);
             }
 
-            Type* inside_array = dynamic_cast<ArrayType*>(left_exp_type)->base;
+            Type *inside_array = dynamic_cast<ArrayType *>(left_exp_type)->base;
             Type *right_exp_type = ExpressionEntry(node->children[2]);
 
             if (right_exp_type->name == "INVALID") {

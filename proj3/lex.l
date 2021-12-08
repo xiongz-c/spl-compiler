@@ -74,8 +74,6 @@ empty [ \n\r\t]
 "."       { yylval = new ast_node( "DOT", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return DOT; }
 ";"       { yylval = new ast_node( "SEMI", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return SEMI; }
 ","       { yylval = new ast_node( "COMMA", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return COMMA; }
-"read"    { yylval = new ast_node("READ", TERMINAL_WITH_ATTRIBUTE, "", yylineno); return READ;}
-"write"   { yylval = new ast_node("WRITE", TERMINAL_WITH_ATTRIBUTE, "", yylineno); return WRITE;}
 
 "\n" { yycolno = 1; }
 "//" { char c; while(( c=yyinput()) != '\n'); }
