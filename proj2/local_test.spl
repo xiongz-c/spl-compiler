@@ -1,18 +1,10 @@
-struct Person
+int main()
 {
-  int name;
-  int friends[10];
-}; 
-int test_2_r10()
-{
-  struct Person tom;
-  struct Person people[10];
-  int i = 0;
-  while (i < 10)
-  {
-    people[i].name = i;
-    tom.friends[i] = i;
-    i = i + 1;
-  }
-  return tom.name[i-1];
+    int a, b, c;
+    int final = 0;
+    a = 5;
+    b = a * a * (a + 2);
+    c = b / a + 1;
+    final = a + b - c * 3 + (b / a - 4);
+    return 0;
 }

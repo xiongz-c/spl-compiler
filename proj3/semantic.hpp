@@ -238,7 +238,7 @@ public:
         auto it = this->symbolTableInstance.begin();
         cout << "===========================" << endl;
         while (it != this->symbolTableInstance.end()) {
-            cout << " ID : " << it->first << "   " << it->second->type->name << "scope : " << it->second->scope_num
+            cout << " ID : " << it->first << "   " << it->second->type->name << "  " << "scope : " << it->second->scope_num
                  << endl;
 //            if (it->first == "STRUCT_Demo") {
 //                StructureType *tmp_st = dynamic_cast<StructureType *>(it->second->type);
@@ -380,14 +380,14 @@ bool semanticEntry(ast_node *root) {
     D(cerr << ">> root children size : " << root->children.size() << endl;)
     D(cerr << "lineno: " << __LINE__ << " " << root->printNode() << endl;)
 
-    SymbolElement *readEntry = new SymbolElement("", new PrimitiveType("int"), 0, 0, "FUNC", {});
+    // for proj3: insert read/write function
+    vector<Type*> *read_args = new vector<Type*>;;
+    SymbolElement *readEntry = new SymbolElement("", new PrimitiveType("int"), 0, 0, "FUNC", read_args);
     symbolTable.insertEntry("FUNC_read", readEntry);
-
-    vector<Type*> write_args;
-    write_args.push_back(new PrimitiveType("int"));
-    SymbolElement *writeEntry = new SymbolElement("", nullptr, 0, 0, "FUNC", &write_args);
+    vector<Type*> *write_args = new vector<Type*>;
+    (*write_args).push_back(new PrimitiveType("int"));
+    SymbolElement *writeEntry = new SymbolElement("", new PrimitiveType("int"), 0, 0, "FUNC", write_args);
     symbolTable.insertEntry("FUNC_write", writeEntry);
-    symbolTable.showTable();
     extDefListEntry(root->children[0]);
     return error_flag;
 }
