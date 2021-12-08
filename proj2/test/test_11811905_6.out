@@ -1,0 +1,6 @@
+Error type 4 at Line 9: redefine function: func
+Error type 14 at Line 12: no such member
+Error type 7 at Line 16: binary operation on non-number variables
+Error type 6 at Line 16: left side in assignment is rvalue
+Error type 5 at Line 16: unmatching type on both sides of assignment
+Error type 9 at Line 17: invalid argument type for compare in function func

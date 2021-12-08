@@ -1,0 +1,3 @@
+Error type 15 at Line 5: redefine struct: myStruct
+Error type 8 at Line 10: incompatiable return type
+Error type 3 at Line 14: redefine variable: v1

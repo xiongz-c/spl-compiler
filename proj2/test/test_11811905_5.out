@@ -1,0 +1,4 @@
+Error type 14 at Line 11: no such member
+Error type 5 at Line 14: unmatching type on both sides of assignment
+Error type 14 at Line 16: no such member: field3
+Error type 1 at Line 16: undefined variable: v6

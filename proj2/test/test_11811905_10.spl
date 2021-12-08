@@ -1,0 +1,17 @@
+int test_11811806_10()
+{
+    float f = 1.0;
+    char c = 'a';
+    int i = f - c;
+    while(10){
+        while(10){
+            return 1;
+        }
+    }
+    if( 10 > 9 ){
+        return 1;
+    }else {
+        return 2.0;
+    }
+    return c;
+}

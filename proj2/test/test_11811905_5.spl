@@ -1,0 +1,19 @@
+struct test1 {};
+
+struct test2 {
+    int field1[2];
+    struct test1 field2;
+} v1, v2[2];
+
+int test_11811806_5() {
+    float v3 = 1.0;
+    int v4[3][2];
+    struct test3 v5;
+    struct test2 local;
+    v1.field2 = local;
+    v1.field1[0] = v3;
+    v1.field1 = v4[2];
+    v2[0].field3 = v6;
+
+    return 0;
+}

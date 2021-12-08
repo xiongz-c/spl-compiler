@@ -1,0 +1,9 @@
+int arr[2][2];
+
+int test_11811806_9() {
+    int v1[10][10];
+    float v2 = 1.0;
+    int v3 = v1[v2*arr[0][0]][0];
+    int v4 = v1[9];
+    return v3;
+}

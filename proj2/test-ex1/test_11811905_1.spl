@@ -1,10 +1,15 @@
-int g1;
+int v;
+int a[2];
 
-int func(int p1, float p2) {
-    return 0; 
+struct test{
+    float m1;
+}g1;
+
+float test_1() {
+    v = 1;
+    if(v > 0) {
+        char v = 'a';
+    }
+    v = a[0] + 2;
+    return v+g1.m1;
 }
-
-int test_11811905_1() {
-    float v1 = 1.0;
-    return func(g1, v1) + 2.0;
-} 

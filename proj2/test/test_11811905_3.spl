@@ -1,0 +1,12 @@
+struct test {
+    int m1;
+} g1;
+
+int test_11811806_3(int a) {
+    int c = a && g1.m1;
+    int notA = !a;
+    if ( c > 10){
+        return 2.0;
+    }
+    return c;
+}

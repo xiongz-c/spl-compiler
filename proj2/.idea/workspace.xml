@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b3dc6117-047e-4e79-9979-d38f812471e9" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../proj3/ir.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/local_test.spl" beforeDir="false" afterPath="$PROJECT_DIR$/local_test.spl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/p_out.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/semantic.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/semantic.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test-ex1/test_11811905_1.out" beforeDir="false" afterPath="$PROJECT_DIR$/test-ex1/test_11811905_1.out" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test-ex1/test_11811905_1.spl" beforeDir="false" afterPath="$PROJECT_DIR$/test-ex1/test_11811905_1.spl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test-ex1/test_11811905_2.out" beforeDir="false" afterPath="$PROJECT_DIR$/test-ex1/test_11811905_2.out" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test-ex1/test_11811905_2.spl" beforeDir="false" afterPath="$PROJECT_DIR$/test-ex1/test_11811905_2.spl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_1.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_10.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_2.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_3.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_4.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_5.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_6.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_7.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_8.spl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_11811806_9.spl" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="20dPJebyjIyS2uIcn6OTJHd0MMk" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="RunOnceActivity.cidr.known.project.marker" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="cidr.known.project.marker" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b3dc6117-047e-4e79-9979-d38f812471e9" name="Changes" comment="" />
+      <created>1636371420933</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1636371420933</updated>
+      <workItem from="1636371422106" duration="16701000" />
+      <workItem from="1636698354643" duration="4394000" />
+      <workItem from="1636867051728" duration="18690000" />
+      <workItem from="1637027579662" duration="38339000" />
+      <workItem from="1637484557030" duration="3270000" />
+      <workItem from="1638522702475" duration="751000" />
+      <workItem from="1638619881939" duration="31000" />
+      <workItem from="1638620639253" duration="932000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

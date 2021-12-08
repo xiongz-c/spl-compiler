@@ -98,7 +98,6 @@ public:
 
     StructureType(vector<Type *> *vec) {
         for (int i = 0; i < vec->size(); i++) {
-            //cout << "Testing pushing : " << (*vec)[i]->filed_name << endl;
             fields.push_back((*vec)[i]);
         }
         field_size = vec->size();
@@ -194,13 +193,6 @@ public:
         cout << "===========================" << endl;
         while (it != this->symbolTableInstance.end()) {
             cout << " ID : " << it->first << "   " << it->second->type->name << "scope : " << it->second->scope_num  << endl;
-//            if (it->first == "STRUCT_Demo") {
-//                StructureType *tmp_st = dynamic_cast<StructureType *>(it->second->type);
-//                cout << "    Demo Detail:" << endl;
-//                for (int i = 0; i < tmp_st->fields.size(); i++) {
-//                    cout << "         fields:" << tmp_st->fields[i]->filed_name << endl;
-//                }
-//            }
             it++;
         }
         cout << "===========================" << endl;
@@ -287,16 +279,6 @@ bool equalType(Type* left, Type* right){
     }
 }
 
-//PrimitiveType* transArrayTypeToPrimitive(ArrayType* type){
-//    Type* begin_type = type->base;
-//    ArrayType* tmp = dynamic_cast<ArrayType*>(begin_type);
-//    while(tmp!= nullptr){
-//        begin_type = begin_type->base;
-//        tmp = dynamic_cast<ArrayType*>(begin_type->base);
-//    }
-//    return dynamic_cast<PrimitiveType*>(begin_type->base);
-//}
-
 Type* createEmptyType(int lVal){
     Type * empty = new Type();
     empty->name = "INVALID";
@@ -306,9 +288,7 @@ Type* createEmptyType(int lVal){
 
 Type *copyType(Type *type) {
     Type *res;
-    //cout << "Gonna Copy! " << endl;
     if (type->name.substr(0, 9) == "Primitive") {
-        // cout << "Primitive type! " << type->name.substr(10) << endl;
         res = new PrimitiveType(type->name.substr(10));
     } else if (type->name.substr(0, 9) == "Structure") {
         StructureType *tmp_st_type = dynamic_cast<StructureType *>(type);
@@ -320,7 +300,6 @@ Type *copyType(Type *type) {
     } else if (type->name.substr(0, 5) == "Array") {
         ArrayType *tmp_array_type = dynamic_cast<ArrayType *>(type);
         res = new ArrayType(copyType(tmp_array_type->base), tmp_array_type->size);
-        // cout << "Test array name : " << type->name << endl;
     }
     res->name = type->name;
     res->filed_name = type->filed_name;
@@ -424,11 +403,6 @@ void stmtEntry(ast_node *node, string func_id) {
 void defEntry(ast_node *node, vector<Type *> *vec_po) {
     if (node->children_num != 3)return;
     Type *spec_type = specifierEntry(node->children[0]);
-    //cout <<  "line 355 : " << spec_type-> name << endl;
-    if (spec_type->name == "Structure" && vec_po == nullptr) {
-        //cout << "Table in defEntry: " << endl;
-        //symbolTable.showTable();
-    }
     decListEntry(node->children[1], spec_type, vec_po);
     D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
 }
@@ -574,12 +548,6 @@ Type *ExpressionEntry(ast_node *node) {
                     left_exp_type->lVal = (left_exp_type->lVal || right_exp_type->lVal);
                     return left_exp_type;
                 } else {
-//                    ArrayType* test = dynamic_cast<ArrayType*>(left_exp_type);
-//                    if(test == nullptr){
-//                        cout << "goal" << endl;
-//                    }
-//                    PrimitiveType * mytype = transArrayTypeToPrimitive(dynamic_cast<ArrayType*>(right_exp_type));
-
                     reportError(7, node->line_num, "");
                     return createEmptyType(0);
                 }
@@ -635,29 +603,30 @@ Type *ExpressionEntry(ast_node *node) {
             }
             return createEmptyType(1);
         } else if (node->children_num == 4 && node->children[1]->name == "LB") {
+            int isError = 0;
             if( left_exp_type->name != "INVALID" && dynamic_cast<ArrayType*>(left_exp_type) == nullptr){
                 reportError(10, node->line_num, "");
-                return createEmptyType(1);
+                isError = 1;
             }
-
-            Type* inside_array = dynamic_cast<ArrayType*>(left_exp_type)->base;
             Type *right_exp_type = ExpressionEntry(node->children[2]);
-
-            if (right_exp_type->name == "INVALID") {
-                return createEmptyType(1);
-            }
-
             if (right_exp_type->name != "Primitive_int") {
                 reportError(12, node->line_num, "");
+                isError = 1;
+            }
+            if(right_exp_type->name == "INVALID" ||  left_exp_type->name == "INVALID" || isError){
                 return createEmptyType(1);
             }
+            Type* inside_array = dynamic_cast<ArrayType*>(left_exp_type)->base;
             inside_array->lVal = 1;
             return inside_array;
         }
     } else if (node->children_num == 2 && node->children[0]->name == "MINUS") {
         return ExpressionEntry(node->children[1]);
+    } else if(node->children[0]->name == "NOT"){
+        return ExpressionEntry(node->children[1]);
+    } else if(node->children_num == 3 && node->children[0]->name == "LP"){
+        return ExpressionEntry(node->children[1]);
     }
-    D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
     return createEmptyType(0);
 }
 
@@ -762,6 +731,9 @@ Type *varDecEntry(ast_node *node, Type *spec_type) {
     if (node->children_num <= 0)return createEmptyType(1);
     D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
     if (node->children[0]->name == "ID") {
+        if(spec_type->name == "INVALID"){
+            return createEmptyType(1);
+        }
         spec_type->filed_name = node->children[0]->value;
         Type *res = copyType(spec_type);
         pair < string, SymbolElement * > info = createTableInfo(node->children[0], spec_type, "VAR", nullptr);

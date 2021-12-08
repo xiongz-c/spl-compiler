@@ -1,0 +1,4 @@
+Error type 3 at Line 2: redefine variable: test
+Error type 15 at Line 8: redefine struct: test
+Error type 4 at Line 10: redefine function: test
+Error type 5 at Line 13: unmatching type on both sides of assignment

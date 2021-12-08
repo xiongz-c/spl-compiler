@@ -1,0 +1,16 @@
+int test;
+char test;
+
+struct test {};
+
+int test() {}
+
+struct test {};
+
+int test() {}
+
+int test_11811806_2() {
+    int b = (2.0);
+
+    return 0;
+}

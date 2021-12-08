@@ -1,0 +1,19 @@
+struct myStruct{
+    float m1;
+}g1[2][3];
+
+struct myStruct {
+
+};
+
+int test_func(){
+    return 2.0;
+}
+
+int test_11811906_1(int v1, float v2) {
+    int v1 = 2;
+    g1[0][0].m1 = v2;
+
+    return test_func();
+}
+
