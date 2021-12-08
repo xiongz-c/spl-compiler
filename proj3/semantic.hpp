@@ -461,6 +461,8 @@ void stmtEntry(ast_node *node, string func_id) {
     } else if (node->children_num == 5 && node->children[0]->name == "WHILE") {
         Type *type = ExpressionEntry(node->children[2]);
         stmtEntry(node->children[4], func_id);
+    }else if (node->children[0]->name == "WRITE") {
+        return;
     }
 }
 
@@ -677,7 +679,13 @@ Type *ExpressionEntry(ast_node *node) {
                 return rt_type;
             }
             return createEmptyType(1);
-        } else if (node->children_num == 4 && node->children[1]->name == "LB") {
+        } else if (node->children == 4 && node->children[0]->name == "READ") {
+            assert(node->child[1]->type_name.compare("LP") == 0);
+            assert(node->child[2]->type_name.compare("RP") == 0);
+            return new PrimitiveType(PrimitiveType::INT);
+        }
+
+        else if (node->children_num == 4 && node->children[1]->name == "LB") {
             if( left_exp_type->name != "INVALID" && dynamic_cast<ArrayType*>(left_exp_type) == nullptr){
                 reportError(10, node->line_num, "");
                 return createEmptyType(1);
