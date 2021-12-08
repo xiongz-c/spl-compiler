@@ -15,7 +15,7 @@ int *genlist(int id){
     int *label = new int(id);
     return label;
 }
-string remove_tmp(){tmp_cnt--}
+string remove_tmp(){tmp_cnt--;}
 float str_to_num(string value, bool type){
     if (!type) // DEFAULT: parse to int when false
         atoi(value.c_str());
@@ -43,10 +43,10 @@ public:
         LABEL, FUNC,
         ASSIGN,
         ARITH,
-        ASSIGN_ADDRESS, ASSIGN_VALUE, COPY_VALUE, CALL
+        ASSIGN_ADDRESS, ASSIGN_VALUE, COPY_VALUE, CALL,
         IF,
         DEC,
-        GOTO, RETURN, PARAM, ARG, READ, WRITE
+        GOTO, RETURN, PARAM, ARG, READ, WRITE,
         EXIT} tac_type;
     Tac(TacType tac_type) {
         this->tac_type = tac_type;
@@ -147,13 +147,13 @@ vector<int> cont, br;
 
 string Tac::append_self() {
     tac_vector.push_back(this);
-    if (tac->tac_type == Tac::FUNC) return string(tac_vector.size() - 1);
+    if (this->tac_type == Tac::FUNC) return std::to_string(tac_vector.size() - 1);
     return this->operands[RESULT];
 }
 
 string append_tac(Tac *tac) {
     tac_vector.push_back(tac);
-    if (tac->tac_type == Tac::FUNC) return string(tac_vector.size() - 1);
+    if (tac->tac_type == Tac::FUNC) return std::to_string(tac_vector.size() - 1);
     return tac->operands[RESULT]
 }
 
@@ -164,7 +164,7 @@ void ir_generate() {
 }
 
 void put_ir(string name, string vid){ir_table[name] = vid;}
-int get_ir(string name){return ir_table[name];}
+string get_ir(string name){return ir_table[name];}
 
 void check_refer(ast_node* exp, string& place) {
     if (exp->children[0]->name == "Exp" && exp->children.size() > 1) {
@@ -343,13 +343,13 @@ void ir_stmt(ast_node *node){
     }
         // CompSt
     else if(node->children[0]->name.compare("CompSt") == 0){
-        ir_comp_stmt(node->child[0]);
+        ir_comp_stmt(node->children[0]);
     }
         // RETURN Exp SEMI
     else if(node->children[0]->name.compare("RETURN") == 0){
         string tp = Tmp();
         translate_exp(node->children[1], tp);
-        checkRefer(node->children[1], tp);
+        check_refer(node->children[1], tp);
         append_tac(new Tac(Tac::RETURN, "RETURN", tp));
     }
         // IF
@@ -363,11 +363,10 @@ void ir_stmt(ast_node *node){
         ir_stmt(node->children[4]);
 
         if(node->children_num < 6){
-            int fbranch = append_tac(new Tac(Tac::GOTO, "GOTO", lb2));
-            if_stmt(expid, tbranch, fbranch);
+            append_tac(new Tac(Tac::LABEL, "LABEL", lb2));
         }else {
             string lb3 = Label();
-            jbranch = append_tac(new Tac(Tac::GOTO, "GOTO", lb3));
+            append_tac(new Tac(Tac::GOTO, "GOTO", lb3));
             append_tac(new Tac(Tac::LABEL, "LABEL", lb2));
             ir_stmt(node->child[6]);
             append_tac(new Tac(Tac::LABEL, "LABEL", lb3));
@@ -380,7 +379,7 @@ void ir_stmt(ast_node *node){
         string lb3 = Label();
 
         append_tac(new Tac(Tac::LABEL, "LABEL", lb1));
-
+        translate_cond_exp(node->children[2], lb2, lb3);
 
         append_tac(new Tac(Tac::LABEL, "LABEL", lb2));
         ir_stmt(node->children[4]);
