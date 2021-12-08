@@ -387,7 +387,7 @@ bool semanticEntry(ast_node *root) {
     write_args.push_back(new PrimitiveType("int"));
     SymbolElement *writeEntry = new SymbolElement("", nullptr, 0, 0, "FUNC", &write_args);
     symbolTable.insertEntry("FUNC_write", writeEntry);
-
+    symbolTable.showTable();
     extDefListEntry(root->children[0]);
     return error_flag;
 }
