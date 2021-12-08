@@ -679,8 +679,8 @@ Type *ExpressionEntry(ast_node *node) {
                 return rt_type;
             }
             return createEmptyType(1);
-        } else if (node->children == 4 && node->children[0]->name == "READ") {
-            return new PrimitiveType(PrimitiveType::INT);
+        } else if (node->children_num == 4 && node->children[0]->name == "READ") {
+            return new PrimitiveType("int");
         }
 
         else if (node->children_num == 4 && node->children[1]->name == "LB") {
