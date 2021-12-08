@@ -481,11 +481,6 @@ void stmtEntry(ast_node *node, string func_id) {
 void defEntry(ast_node *node, vector<Type *> *vec_po) {
     if (node->children_num != 3)return;
     Type *spec_type = specifierEntry(node->children[0]);
-    //cout <<  "line 355 : " << spec_type-> name << endl;
-    if (spec_type->name == "Structure" && vec_po == nullptr) {
-        //cout << "Table in defEntry: " << endl;
-        //symbolTable.showTable();
-    }
     decListEntry(node->children[1], spec_type, vec_po);
     D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
 }
@@ -527,13 +522,12 @@ Type *checkFunc(ast_node *node, vector<Type *> *args) {
     if (args != nullptr) {
         if (info_FUNC->args.size() != args->size()) {
             reportError(9, node->line_num,
-                        "argument number for compare, expect " + to_string(info_FUNC->args.size()) + ", got " +
-                        to_string(args->size()));
-        } else {
-            for (int i = 0; i < args->size(); i++) {
-                if (!equalType((*args)[i], info_FUNC->args[i])) {
+                        "argument number for compare, expect " + to_string(info_FUNC->args.size()) + ", got " + to_string(args->size()));
+        }else{
+            for(int i = 0; i < args->size() ; i++){
+                if(!equalType((*args)[i],info_FUNC->args[i])){
                     reportError(9, node->line_num,
-                                "argument type for compare in function " + node->value);
+                                "argument type for compare in function "+node->value);
                     break;
                 }
             }
@@ -693,29 +687,30 @@ Type *ExpressionEntry(ast_node *node) {
             }
             return createEmptyType(1);
         } else if (node->children_num == 4 && node->children[1]->name == "LB") {
-            if (left_exp_type->name != "INVALID" && dynamic_cast<ArrayType *>(left_exp_type) == nullptr) {
+            int isError = 0;
+            if( left_exp_type->name != "INVALID" && dynamic_cast<ArrayType*>(left_exp_type) == nullptr){
                 reportError(10, node->line_num, "");
-                return createEmptyType(1);
+                isError = 1;
             }
-
-            Type *inside_array = dynamic_cast<ArrayType *>(left_exp_type)->base;
             Type *right_exp_type = ExpressionEntry(node->children[2]);
-
-            if (right_exp_type->name == "INVALID") {
-                return createEmptyType(1);
-            }
-
             if (right_exp_type->name != "Primitive_int") {
                 reportError(12, node->line_num, "");
+                isError = 1;
+            }
+            if(right_exp_type->name == "INVALID" ||  left_exp_type->name == "INVALID" || isError){
                 return createEmptyType(1);
             }
+            Type* inside_array = dynamic_cast<ArrayType*>(left_exp_type)->base;
             inside_array->lVal = 1;
             return inside_array;
         }
     } else if (node->children_num == 2 && node->children[0]->name == "MINUS") {
         return ExpressionEntry(node->children[1]);
+    } else if(node->children[0]->name == "NOT"){
+        return ExpressionEntry(node->children[1]);
+    } else if(node->children_num == 3 && node->children[0]->name == "LP"){
+        return ExpressionEntry(node->children[1]);
     }
-    D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
     return createEmptyType(0);
 }
 
@@ -820,6 +815,9 @@ Type *varDecEntry(ast_node *node, Type *spec_type) {
     if (node->children_num <= 0)return createEmptyType(1);
     D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
     if (node->children[0]->name == "ID") {
+        if(spec_type->name == "INVALID"){
+            return createEmptyType(1);
+        }
         spec_type->filed_name = node->children[0]->value;
         Type *res = copyType(spec_type);
         pair < string, SymbolElement * > info = createTableInfo(node->children[0], spec_type, "VAR", nullptr);
