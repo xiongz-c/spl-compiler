@@ -48,13 +48,23 @@ class Type {
 public:
     string name;
     string filed_name;
+    string vid;
     int lVal;
+    bool is_refer = false;
 
     void setName(string s) {
         this->name = s;
     }
 
+    void setVid(string s) {
+        this->vid = s;
+    }
+
     virtual ~Type() = default;
+    int type_size();
+    void set_refer(){
+        is_refer = true;
+    }
 };
 
 class PrimitiveType : public Type {
@@ -74,6 +84,9 @@ public:
             this->primitive = CHAR;
         }
     }
+    int type_size() {
+        return 4;
+    }
 };
 
 class ArrayType : public Type {
@@ -83,6 +96,10 @@ public:
 
     ArrayType(Type *base, int size) : base(base), size(size) {
         this->name = "Array_" + base->name;
+    }
+
+    int type_size() {
+        return size * base->type_size();
     }
 };
 
@@ -107,6 +124,24 @@ public:
 
     StructureType() {
         this->name = "Structure";
+    }
+
+    int structure_offset(string member){
+        int offset = 0;
+        for (int i = 0; i < fields->size(); ++i) {
+            Type* field = fields->at(i);
+            if (field->name == member)
+                break;
+            offset += field->type_size();
+        }
+        return offset;
+    }
+
+    int type_size() {
+        int count = 0;
+        for (auto itr = fields->begin(); itr != fields->end(); ++itr)
+            count += (*itr)->type_size();
+        return count;
     }
 
 };
