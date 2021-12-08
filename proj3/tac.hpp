@@ -73,9 +73,9 @@ public:
         this->operands[RESULT] = res;
         swap_flag = false;
     }
-    Tac(TacType tac_type, const string& res, vector<int> arr, string name) {
+    Tac(TacType tac_type, const string& op, const string& res, vector<int> arr, string name) {
         this->tac_type = tac_type;
-        this->op = "DEC"; // just for dec
+        this->op = op; // just for dec or PARAM
         this->operands[RESULT] = res;
         this->operands[ARG2] = name; // 打印用不到，用于存var name
 
@@ -86,21 +86,6 @@ public:
         }
         // todo 不确定需不需要size vector, 先不操作
         this->operands[ARG1] = std::to_string(tot);
-        swap_flag = false;
-    }
-
-    Tac(TacType tac_type, const string& res, vector<int> arr, string name) {
-        this->tac_type = tac_type;
-        this->op = "PARAM"; // just for PARAM
-        this->operands[RESULT] = res;
-        this->operands[ARG2] = name; // 打印用不到，用于存var name
-
-        int tot = 1;
-        for(int i = arr.size() - 1; i >= 0; --i) {
-            this->suffix.push_back(tot);
-            tot *= arr[i];
-        }
-
         swap_flag = false;
     }
 
@@ -373,7 +358,7 @@ void ir_stmt(ast_node *node){
         }
     }
         // WHILE LP Exp RP Stmt
-    else if(node->children[0]->type_name.compare("WHILE") == 0){
+    else if(node->children[0]->name.compare("WHILE") == 0){
         string lb1 = Label();
         string lb2 = Label();
         string lb3 = Label();
@@ -613,9 +598,9 @@ Tac* ir_var_dec(ast_node *node, Type* type){
     }
 
     if (int_vector.size()) { // array
-        return new Tac(Tac::DEC, Var(), int_vector, name);
+        return new Tac(Tac::DEC, "DEC", Var(), int_vector, name);
     } else if (equalType(type, new StructureType()), type) { // structure
-        return new Tac(Tac::DEC, Var(), vector<int>{}, name);
+        return new Tac(Tac::DEC, "DEC", Var(), vector<int>{}, name);
     } else {
         Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", val2str(0).c_str(), Var());
         tac->operands[ARG2] = name;
@@ -647,5 +632,6 @@ void ir_param_dec(ast_node *node){
     Type *type = ir_specifier(node->children[0]);
     Tac *tac = ir_var_dec(node->children[1], type);
     tac->tac_type = Tac::PARAM;
+    tac->op = "PARAM";
     put_ir(tac->operands[ARG2], append_tac(tac));
 }

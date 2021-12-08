@@ -38,7 +38,7 @@ unordered_map<int, string> error_info =
                 {16, "only int can do boolean operation"}
         };
 
-
+bool error_flag;
 /*
  *=======================
  *=== Type declaration===
@@ -61,7 +61,9 @@ public:
     }
 
     virtual ~Type() = default;
-    int type_size();
+    int type_size() {
+        return 0;
+    }
     void set_refer(){
         is_refer = true;
     }
@@ -270,7 +272,7 @@ SymbolTable symbolTable;
  * ===Analysis function declaration===
  * ===================================
  * */
-void semanticEntry(ast_node *);
+bool semanticEntry(ast_node *);
 
 void extDefListEntry(ast_node *);
 
@@ -315,6 +317,7 @@ void argsEntry(ast_node *node, vector<Type *> *args);
 void extDecList(ast_node *node, Type *type);
 
 void reportError(int type, int line_num, string diy) {
+    error_flag = 1;
     cout << "Error type " << type << " at Line " << line_num << ": " << error_info[type] << diy << endl;
 }
 
@@ -367,11 +370,12 @@ Type *copyType(Type *type) {
     return res;
 }
 
-void semanticEntry(ast_node *root) {
-    if (root->children_num <= 0)return;
+bool semanticEntry(ast_node *root) {
+    if (root->children_num <= 0)return true;
     D(cerr << ">> root children size : " << root->children.size() << endl;)
     D(cerr << "lineno: " << __LINE__ << " " << root->printNode() << endl;)
     extDefListEntry(root->children[0]);
+    return error_flag;
 }
 
 

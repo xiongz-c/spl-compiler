@@ -222,9 +222,11 @@ int main(int argc, char **argv) {
     }
     yyparse();
     if(!existError){
-    //print_tree(root,0);
-    semanticEntry(root);
-    ir_starter(root)
+        //print_tree(root,0);
+        bool with_error = semanticEntry(root);
+        if (!with_error) {
+            ir_starter(root);
+        }
     }
     return 0;
 }

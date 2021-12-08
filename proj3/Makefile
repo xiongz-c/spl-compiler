@@ -1,5 +1,5 @@
 CC=gcc
-G++=g++
+CPP=g++
 FLEX=flex
 BISON=bison
 
@@ -9,11 +9,11 @@ BISON=bison
 	$(BISON) -t -d syntax.y -Wconflicts-sr
 splc: clean  .syntax .lex
 	@mkdir bin
-	$(G++) ast.hpp syntax.tab.c semantic.hpp tac.hpp -lfl -ly -o bin/splc
+	$(CPP) ast.hpp syntax.tab.c semantic.hpp tac.hpp -lfl -ly -o bin/splc
 	@chmod +x bin/splc
 debug: clean  .syntax .lex
 	@mkdir bin
-	$(G++) ast.hpp syntax.tab.c semantic.hpp tac.hpp -D DEBUG -lfl -ly -o bin/splc
+	$(CPP) ast.hpp syntax.tab.c semantic.hpp tac.hpp -D DEBUG -lfl -ly -o bin/splc
 	@chmod +x bin/splc
 gen:
 	$(FLEX) tmp.l
