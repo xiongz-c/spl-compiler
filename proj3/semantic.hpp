@@ -38,6 +38,7 @@ unordered_map<int, string> error_info =
                 {16, "only int can do boolean operation"}
         };
 
+bool error_flag;
 
 /*
  *=======================
@@ -48,13 +49,27 @@ class Type {
 public:
     string name;
     string filed_name;
+    string vid;
     int lVal;
+    bool is_refer = false;
 
     void setName(string s) {
         this->name = s;
     }
 
+    void setVid(string s) {
+        this->vid = s;
+    }
+
     virtual ~Type() = default;
+
+    int type_size() {
+        return 0;
+    }
+
+    void set_refer() {
+        is_refer = true;
+    }
 };
 
 class PrimitiveType : public Type {
@@ -74,6 +89,10 @@ public:
             this->primitive = CHAR;
         }
     }
+
+    int type_size() {
+        return 4;
+    }
 };
 
 class ArrayType : public Type {
@@ -83,6 +102,10 @@ public:
 
     ArrayType(Type *base, int size) : base(base), size(size) {
         this->name = "Array_" + base->name;
+    }
+
+    int type_size() {
+        return size * base->type_size();
     }
 };
 
@@ -107,6 +130,24 @@ public:
 
     StructureType() {
         this->name = "Structure";
+    }
+
+    int structure_offset(string member) {
+        int offset = 0;
+        for (int i = 0; i < fields.size(); ++i) {
+            Type *field = fields[i];
+            if (field->name == member)
+                break;
+            offset += field->type_size();
+        }
+        return offset;
+    }
+
+    int type_size() {
+        int count = 0;
+        for (auto itr = fields.begin(); itr != fields.end(); ++itr)
+            count += (*itr)->type_size();
+        return count;
     }
 
 };
@@ -197,7 +238,8 @@ public:
         auto it = this->symbolTableInstance.begin();
         cout << "===========================" << endl;
         while (it != this->symbolTableInstance.end()) {
-            cout << " ID : " << it->first << "   " << it->second->type->name << "scope : " << it->second->scope_num  << endl;
+            cout << " ID : " << it->first << "   " << it->second->type->name << "  " << "scope : " << it->second->scope_num
+                 << endl;
 //            if (it->first == "STRUCT_Demo") {
 //                StructureType *tmp_st = dynamic_cast<StructureType *>(it->second->type);
 //                cout << "    Demo Detail:" << endl;
@@ -213,7 +255,7 @@ public:
     void flushTable() {
         auto it = this->symbolTableInstance.begin();
         while (it != this->symbolTableInstance.end()) {
-            if (it->second->scope_num == this->scope && it->first.substr(0,4) != "FUNC") {
+            if (it->second->scope_num == this->scope && it->first.substr(0, 4) != "FUNC") {
                 this->symbolTableInstance.erase(it++);
             } else {
                 it++;
@@ -235,7 +277,7 @@ SymbolTable symbolTable;
  * ===Analysis function declaration===
  * ===================================
  * */
-void semanticEntry(ast_node *);
+bool semanticEntry(ast_node *);
 
 void extDefListEntry(ast_node *);
 
@@ -280,13 +322,14 @@ void argsEntry(ast_node *node, vector<Type *> *args);
 void extDecList(ast_node *node, Type *type);
 
 void reportError(int type, int line_num, string diy) {
+    error_flag = 1;
     cout << "Error type " << type << " at Line " << line_num << ": " << error_info[type] << diy << endl;
 }
 
-bool equalType(Type* left, Type* right){
-    if(left->name == right->name){
+bool equalType(Type *left, Type *right) {
+    if (left->name == right->name) {
         return true;
-    }else{
+    } else {
         return false;
     }
 }
@@ -301,8 +344,8 @@ bool equalType(Type* left, Type* right){
 //    return dynamic_cast<PrimitiveType*>(begin_type->base);
 //}
 
-Type* createEmptyType(int lVal){
-    Type * empty = new Type();
+Type *createEmptyType(int lVal) {
+    Type *empty = new Type();
     empty->name = "INVALID";
     empty->lVal = lVal;
     return empty;
@@ -332,11 +375,21 @@ Type *copyType(Type *type) {
     return res;
 }
 
-void semanticEntry(ast_node *root) {
-    if (root->children_num <= 0)return;
+bool semanticEntry(ast_node *root) {
+    if (root->children_num <= 0)return true;
     D(cerr << ">> root children size : " << root->children.size() << endl;)
     D(cerr << "lineno: " << __LINE__ << " " << root->printNode() << endl;)
+
+    // for proj3: insert read/write function
+    vector<Type*> *read_args = new vector<Type*>;;
+    SymbolElement *readEntry = new SymbolElement("", new PrimitiveType("int"), 0, 0, "FUNC", read_args);
+    symbolTable.insertEntry("FUNC_read", readEntry);
+    vector<Type*> *write_args = new vector<Type*>;
+    (*write_args).push_back(new PrimitiveType("int"));
+    SymbolElement *writeEntry = new SymbolElement("", new PrimitiveType("int"), 0, 0, "FUNC", write_args);
+    symbolTable.insertEntry("FUNC_write", writeEntry);
     extDefListEntry(root->children[0]);
+    return error_flag;
 }
 
 
@@ -428,11 +481,6 @@ void stmtEntry(ast_node *node, string func_id) {
 void defEntry(ast_node *node, vector<Type *> *vec_po) {
     if (node->children_num != 3)return;
     Type *spec_type = specifierEntry(node->children[0]);
-    //cout <<  "line 355 : " << spec_type-> name << endl;
-    if (spec_type->name == "Structure" && vec_po == nullptr) {
-        //cout << "Table in defEntry: " << endl;
-        //symbolTable.showTable();
-    }
     decListEntry(node->children[1], spec_type, vec_po);
     D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
 }
@@ -516,14 +564,14 @@ Type *ExpressionEntry(ast_node *node) {
         Type *left_exp_type = ExpressionEntry(node->children[0]);
         if (node->children_num == 3 && node->children[1]->name == "ASSIGN") {
             Type *right_exp_type = ExpressionEntry(node->children[2]);
-            if(left_exp_type->lVal == 0){
+            if (left_exp_type->lVal == 0) {
                 reportError(6, node->children[0]->line_num, "");
             }
             int invalid_cnt = 0;
-            if(left_exp_type->name == "INVALID") invalid_cnt++;
-            if(right_exp_type->name == "INVALID") invalid_cnt++;
-            if(invalid_cnt >= 1){
-                if(invalid_cnt == 1){
+            if (left_exp_type->name == "INVALID") invalid_cnt++;
+            if (right_exp_type->name == "INVALID") invalid_cnt++;
+            if (invalid_cnt >= 1) {
+                if (invalid_cnt == 1) {
                     reportError(5, node->line_num, "");
                 }
                 return createEmptyType(0);
@@ -533,10 +581,10 @@ Type *ExpressionEntry(ast_node *node) {
                 string co_array = "Array";
                 string namel = left_exp_type->name;
                 string namer = right_exp_type->name;
-                if(namel.compare(0, co_array.size(), co_array) == 0){
+                if (namel.compare(0, co_array.size(), co_array) == 0) {
                     namel = namel.substr(6);
                 }
-                if(namer.compare(0, co_array.size(), co_array) == 0){
+                if (namer.compare(0, co_array.size(), co_array) == 0) {
                     namer = namer.substr(6);
                 }
                 if (namel != namer) {
@@ -607,7 +655,7 @@ Type *ExpressionEntry(ast_node *node) {
                 string co_array = "Array";
                 StructureType *stType;
                 string lname = left_exp_type->name;
-                while(lname.compare(0, co_array.size(), co_array) == 0){
+                while (lname.compare(0, co_array.size(), co_array) == 0) {
                     lname = lname.substr(6);
                 }
                 if (lname != "Structure") {
@@ -616,10 +664,10 @@ Type *ExpressionEntry(ast_node *node) {
                 }
                 lname = left_exp_type->name;
                 ArrayType *tmp_array_po;
-                Type* tmp_type = left_exp_type;
-                while(lname.compare(0, co_array.size(), co_array) == 0){
+                Type *tmp_type = left_exp_type;
+                while (lname.compare(0, co_array.size(), co_array) == 0) {
                     lname = lname.substr(6);
-                    tmp_array_po = dynamic_cast<ArrayType* >(tmp_type);
+                    tmp_array_po = dynamic_cast<ArrayType * >(tmp_type);
                     tmp_type = tmp_array_po->base;
                 }
                 stType = dynamic_cast<StructureType *>(tmp_type);
@@ -639,29 +687,30 @@ Type *ExpressionEntry(ast_node *node) {
             }
             return createEmptyType(1);
         } else if (node->children_num == 4 && node->children[1]->name == "LB") {
+            int isError = 0;
             if( left_exp_type->name != "INVALID" && dynamic_cast<ArrayType*>(left_exp_type) == nullptr){
                 reportError(10, node->line_num, "");
-                return createEmptyType(1);
+                isError = 1;
             }
-
-            Type* inside_array = dynamic_cast<ArrayType*>(left_exp_type)->base;
             Type *right_exp_type = ExpressionEntry(node->children[2]);
-
-            if (right_exp_type->name == "INVALID") {
-                return createEmptyType(1);
-            }
-
             if (right_exp_type->name != "Primitive_int") {
                 reportError(12, node->line_num, "");
+                isError = 1;
+            }
+            if(right_exp_type->name == "INVALID" ||  left_exp_type->name == "INVALID" || isError){
                 return createEmptyType(1);
             }
+            Type* inside_array = dynamic_cast<ArrayType*>(left_exp_type)->base;
             inside_array->lVal = 1;
             return inside_array;
         }
     } else if (node->children_num == 2 && node->children[0]->name == "MINUS") {
         return ExpressionEntry(node->children[1]);
+    } else if(node->children[0]->name == "NOT"){
+        return ExpressionEntry(node->children[1]);
+    } else if(node->children_num == 3 && node->children[0]->name == "LP"){
+        return ExpressionEntry(node->children[1]);
     }
-    D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
     return createEmptyType(0);
 }
 
@@ -766,6 +815,9 @@ Type *varDecEntry(ast_node *node, Type *spec_type) {
     if (node->children_num <= 0)return createEmptyType(1);
     D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
     if (node->children[0]->name == "ID") {
+        if(spec_type->name == "INVALID"){
+            return createEmptyType(1);
+        }
         spec_type->filed_name = node->children[0]->value;
         Type *res = copyType(spec_type);
         pair < string, SymbolElement * > info = createTableInfo(node->children[0], spec_type, "VAR", nullptr);

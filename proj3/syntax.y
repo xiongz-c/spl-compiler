@@ -17,6 +17,7 @@
 %nonassoc THEN
 %nonassoc ELSE
 %nonassoc FTOKEN
+
 %right ASSIGN
 %left OR AND LT LE GT GE EQ NE
 %left PLUS MINUS
@@ -110,13 +111,14 @@ Stmt: Exp SEMI {  $$ = new ast_node("Stmt", NON_TERMINAL, "", @$.first_line);
                         $$->insert_children( 5, $1, $2, $3, $4, $5);}
         | WHILE LP Exp RP Stmt {  $$ = new ast_node("Stmt", NON_TERMINAL, "", @$.first_line);
                         $$->insert_children( 5, $1, $2, $3, $4, $5);}
-        | FOR LP ForVarList RP Stmt { {$$ = new ast_node("Stmt", NON_TERMINAL, "", @$.first_line);
-                        $$->insert_children( 5, $1, $2, $3, $4, $5);} }
+        | FOR LP ForVarList RP Stmt { $$ = new ast_node("Stmt", NON_TERMINAL, "", @$.first_line);
+                        $$->insert_children( 5, $1, $2, $3, $4, $5); }
         | IF LP Exp error Stmt ELSE Stmt  { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
         | IF LP Exp error Stmt %prec THEN { syntax_error(@3.last_line, "Missing closing parenthesis \')\'"); }
         | RETURN Exp error { syntax_error(@1.first_line , "Missing semicolon \';\'");}
         | Exp error { syntax_error(@1.first_line , "Missing semicolon \';\'"); }
         | Exp SEMI SEMI error { syntax_error(@3.first_line , "Multiple \';\'"); }
+
         ;
 
 /* local definition */
@@ -222,9 +224,11 @@ int main(int argc, char **argv) {
     }
     yyparse();
     if(!existError){
-    //print_tree(root,0);
-    semanticEntry(root);
-    ir_starter(root)
+        //print_tree(root,0);
+        bool with_error = semanticEntry(root);
+        if (!with_error) {
+            ir_starter(root);
+        }
     }
     return 0;
 }
