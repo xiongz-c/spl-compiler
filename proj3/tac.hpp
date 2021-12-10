@@ -89,7 +89,7 @@ public:
         swap_flag = false;
     }
 
-    string to_string() {
+    void to_string() {
         switch (tac_type) {
             case ASSIGN:
                 printf("%s := %s\n", operands[RESULT].c_str(), operands[ARG1].c_str());
@@ -127,7 +127,8 @@ public:
 };
 
 vector<Tac*> tac_vector;
-unordered_map<string, string> ir_table; // key是变量名，value是变量编号
+unordered_map<string, string> value_info; // key是变量名，value是变量编号
+unordered_map<string, *Tac> type_info;// key 是变量编号，value是tac ——用变量编号就不用考虑scope了
 vector<int> cont, br;
 
 string Tac::append_self() {
@@ -148,7 +149,10 @@ void ir_generate() {
     }
 }
 
+// 根据名字放入变量编号
 void put_ir(string name, string vid){ir_table[name] = vid;}
+
+// 根据名字取变量
 string get_ir(string name){return ir_table[name];}
 
 void check_refer(ast_node* exp, string& place) {
@@ -175,9 +179,7 @@ void ir_ext_def_list(ast_node *node);
 void ir_ext_dec_list(ast_node *node, Type * type);
 void ir_ext_def(ast_node *node);
 Type *ir_specifier(ast_node *node);
-Type *ir_type(ast_node *node);
-Type *ir_struct_specifier(ast_node *node);
-void ir_func(ast_node *node, Type *type);
+void ir_func(ast_node *node);
 void ir_comp_stmt(ast_node *node);
 void ir_def_list(ast_node *node);
 void ir_def(ast_node *node);
@@ -222,7 +224,7 @@ void ir_ext_def(ast_node *node){
         ir_ext_dec_list(node->children[1], type);
     }
     if(node->children[1]->name.compare("FunDec") == 0){
-        ir_func(node->children[1], type);
+        ir_func(node->children[1]);
         ir_comp_stmt(node->children[2]);
     }
 }
@@ -231,7 +233,8 @@ void ir_ext_dec_list(ast_node *node, Type *type){
     Tac *tac = ir_var_dec(node->children[0], type);
     while(node->children_num > 1){
         node = node->children[2];
-        Tac *tac = ir_var_dec(node->children[0], type);
+        ir_ext_dec_list(node, type);
+//        Tac *tac = ir_var_dec(node->children[0], type);
     }
     put_ir(tac->operands[ARG2], tac->append_self());
 }
@@ -252,7 +255,7 @@ Type *ir_specifier(ast_node *node){
     return type;
 }
 
-void ir_func(ast_node *node, Type *type){
+void ir_func(ast_node *node){
     string name = node->children[0]->value;
     string func_id = append_tac(new Tac(Tac::FUNC, "FUNCTION", name));
     put_ir(name, func_id);
@@ -597,12 +600,13 @@ Tac* ir_var_dec(ast_node *node, Type* type){
         }
     }
 
+    string v = Var();
     if (int_vector.size()) { // array
-        return new Tac(Tac::DEC, "DEC", Var(), int_vector, name);
+        return new Tac(Tac::DEC, "DEC", v, int_vector, name);
     } else if (equalType(type, new StructureType()), type) { // structure
-        return new Tac(Tac::DEC, "DEC", Var(), vector<int>{}, name);
+        return new Tac(Tac::DEC, "DEC", v, vector<int>{}, name);
     } else {
-        Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", val2str(0).c_str(), Var());
+        Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", val2str(0).c_str(), v);
         tac->operands[ARG2] = name;
         return tac;
     }
