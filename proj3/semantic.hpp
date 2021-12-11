@@ -270,6 +270,7 @@ public:
  * Global Var declaration
  * */
 SymbolTable symbolTable;
+SymbolTable glo_symbolTable;
 
 
 /*
@@ -750,6 +751,7 @@ Type *structSpecifierEntry(ast_node *node) {
             reportError(15, node->children[0]->line_num, ": " + node->children[1]->value);
             return createEmptyType(1);
         }
+        glo_symbolTable.insertEntry(id, element);
         return structType;
     } else if (node->children_num == 2 && node->children[1]->name == "ID") {
         D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
@@ -820,6 +822,7 @@ Type *varDecEntry(ast_node *node, Type *spec_type) {
             reportError(3, node->children[0]->line_num, " " + node->children[0]->value);
             return createEmptyType(1);
         }
+        glo_symbolTable.insertEntry(info.first, info.second);
         return res;
     } else if (node->children[0]->name == "VarDec" && node->children_num == 4) {
         Type *array_type = new ArrayType(spec_type, atoi(node->children[2]->value.c_str()));

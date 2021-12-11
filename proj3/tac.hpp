@@ -115,7 +115,7 @@ public:
                 printf("%s %s :\n",op.c_str(), operands[RESULT].c_str());
                 break;
             case LABEL: // op: LABEL
-                printf("%s %s :\n", op.c_str(), operands[ARG1].c_str());
+                printf("%s %s :\n", op.c_str(), operands[RESULT].c_str());
                 break;
             case EXIT: // last line. maybe for ir optimize
                 printf("\n");
@@ -130,16 +130,26 @@ public:
 
 vector<Tac*> tac_vector;
 unordered_map<string, string> value_info; // key是变量名，value是变量编号
-unordered_map<string, *Tac> type_info;// key 是变量编号，value是tac ——用变量编号就不用考虑scope了
+unordered_map<string, Tac*> type_info;// key 是变量编号，value是tac ——用变量编号就不用考虑scope了
 vector<int> cont, br;
-
+extern SymbolTable glo_symbolTable;
 string Tac::append_self() {
+    if(this->tac_type == Tac::ARITH || this->tac_type == Tac::ASSIGN){
+        if(this->operands[RESULT].empty() || this->operands[ARG1].empty()){
+            return "";
+        }
+    }
     tac_vector.push_back(this);
     if (this->tac_type == Tac::FUNC) return std::to_string(tac_vector.size() - 1);
     return this->operands[RESULT];
 }
 
 string append_tac(Tac *tac) {
+    if(tac->tac_type == Tac::ARITH || tac->tac_type == Tac::ASSIGN){
+        if(tac->operands[RESULT].empty() || tac->operands[ARG1].empty()){
+            return "";
+        }
+    }
     tac_vector.push_back(tac);
     if (tac->tac_type == Tac::FUNC) return std::to_string(tac_vector.size() - 1);
     return tac->operands[RESULT];
@@ -152,10 +162,17 @@ void ir_generate() {
 }
 
 // 根据名字放入变量编号
-void put_ir(string name, string vid){ir_table[name] = vid;}
+void put_ir(string name, string vid){value_info[name] = vid;}
 
 // 根据名字取变量
-string get_ir(string name){return ir_table[name];}
+string get_ir(string name){return value_info[name];}
+
+
+void display_value_info(){
+    for (auto itr = value_info.begin(); itr != value_info.end(); ++itr) {
+        cout << itr->first << "  " << itr->second << endl;
+    }
+}
 
 void check_refer(ast_node* exp, string& place) {
     if (exp->children[0]->name == "Exp" && exp->children.size() > 1) {
@@ -168,7 +185,7 @@ void check_refer(ast_node* exp, string& place) {
 
 void ir_init() {
     tac_vector.clear();
-    ir_table.clear();
+    value_info.clear();
     cont.clear();
     br.clear();
 }
@@ -226,7 +243,7 @@ void ir_ext_def(ast_node *node){
         ir_ext_dec_list(node->children[1], type);
     }
     if(node->children[1]->name.compare("FunDec") == 0){
-        ir_func(node->children[1], type);
+        ir_func(node->children[1]);
         //TODO check whether need a func id
         ir_comp_stmt(node->children[2]);
     }
@@ -397,6 +414,9 @@ void ir_stmt(ast_node *node){
  *    | INT | FLOAT | CHAR
  *    | READ LP RP
  */
+
+
+
 void translate_exp(ast_node *exp, string& place) {
     ast_node *child = exp->children[0];
     if (child->name == "INT") {
@@ -405,8 +425,10 @@ void translate_exp(ast_node *exp, string& place) {
     } else if (child->name == "ID") {
         if (exp->children.size() == 1) {
             place = get_ir(child->value);
-            Type* expType = ExpressionEntry(exp);
-            if (expType->is_refer) place = "&" + place;
+            SymbolElement * target_se = glo_symbolTable.searchEntry(child->value,"VAR");
+            Type* expType = target_se->type;
+            // TODO handle array
+            if (expType->name == "Structure") place = "&" + place;
             remove_tmp();
         } else {
             // function invoke
@@ -444,9 +466,9 @@ void translate_exp(ast_node *exp, string& place) {
             string t2 = Tmp();
             translate_exp(exp->children[2], t2);
             check_refer(exp->children[2], t1);
-
             append_tac(new Tac(Tac::ASSIGN, "ASSIGN", t2, t1));
             append_tac(new Tac(Tac::ASSIGN, "ASSIGN", t1, place));
+
         } else if (sname == "PLUS" || sname == "MINUS" || sname == "MUL" || sname == "DIV") {
             // Arithmetic
             string t1 = Tmp();
@@ -456,7 +478,6 @@ void translate_exp(ast_node *exp, string& place) {
             string t2 = Tmp();
             translate_exp(exp->children[2], t2);
             check_refer(exp->children[2], t2);
-
             append_tac(new Tac(Tac::ARITH, exp->children[1]->value, t1, t2, place));
         }
         else if (sname == "LT" || sname == "LE" || sname == "GT" || sname == "GE" ||
@@ -509,15 +530,14 @@ void translate_exp(ast_node *exp, string& place) {
                 append_tac(new Tac(Tac::ARITH, "+", t1, t3, t4));
                 place = t4;
             }
-        } else if (child->name == "MINUS") {
-            string tp = Tmp();
-            translate_exp(exp->children[1], tp);
-            append_tac(new Tac(Tac::ARITH, "-", "#0", tp, place));
-        } else if (child->name == "LP") {
-            // LP Exp RP
-            translate_exp(exp->children[1], place);
         }
-
+    }else if (child->name == "MINUS") {
+        string tp = Tmp();
+        translate_exp(exp->children[1], tp);
+        append_tac(new Tac(Tac::ARITH, "-", "#0", tp, place));
+    } else if (child->name == "LP") {
+        // LP Exp RP
+        translate_exp(exp->children[1], place);
     }
 }
 
@@ -533,9 +553,10 @@ void translate_args(ast_node* Args, list<string>* arg_list) {
         translate_args(Args->children[2], arg_list);
 }
 
+
 void translate_cond_exp(ast_node *exp, string lb_t, string lb_f){
     ast_node *child = exp->children[0];
-    if (child->name == "EXP") {
+    if (child->name == "Exp") {
         string sname = exp->children[1]->name;
         if (sname == "AND") {
             string lb1 = Label();
@@ -549,11 +570,10 @@ void translate_cond_exp(ast_node *exp, string lb_t, string lb_f){
             translate_cond_exp(exp->children[2], lb_t, lb_f);
         } else {
             string t1 = Tmp();
-            translate_exp(exp->children[2], t1);
+            translate_exp(exp->children[0], t1);
 
             string t2 = Tmp();
             translate_exp(exp->children[2], t2);
-
             append_tac(new Tac(Tac::IF, exp->children[1]->value, t1, t2, lb_t));
             append_tac(new Tac(Tac::GOTO, "GOTO", lb_f));
         }
@@ -570,7 +590,8 @@ void translate_cond_exp(ast_node *exp, string lb_t, string lb_f){
  */
 void ir_dec(ast_node *node, Type *type){
     Tac *tac = ir_var_dec(node->children[0], type); // 对vardec的部分 generate
-    put_ir(tac->operands[ARG2], tac->append_self()); //把变量放进变量表
+    put_ir(tac->operands[ARG2], tac->operands[RESULT]); //把变量放进变量表
+    if (tac->tac_type == Tac::DEC) tac->append_self();
     if(node->children_num > 1){ // 第二种情况，右边有表达式
         string tp = Tmp();
         translate_exp(node->children[2], tp);
@@ -607,7 +628,7 @@ Tac* ir_var_dec(ast_node *node, Type* type){
     string v = Var();
     if (int_vector.size()) { // array
         return new Tac(Tac::DEC, "DEC", v, int_vector, name);
-    } else if (equalType(type, new StructureType()), type) { // structure
+    } else if (type->name == "Structure") { // structure
         return new Tac(Tac::DEC, "DEC", v, vector<int>{}, name);
     } else {
         Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", val2str(0).c_str(), v);
@@ -627,10 +648,16 @@ void ir_var_list(ast_node *node){
         node = node->children[2];
         vec.push_back(node->children[0]);
     }
-    while(!vec.empty()){
-        ir_param_dec(vec.back());
-        vec.pop_back();
+    if(!vec.empty()){
+        for (int i = 0; i < vec.size(); ++i) {
+            ir_param_dec(vec[i]);
+        }
     }
+    vec.clear();
+//    while(!vec.empty()){
+//        ir_param_dec(vec.back());
+//        vec.pop_back();
+//    }
 }
 
 /**

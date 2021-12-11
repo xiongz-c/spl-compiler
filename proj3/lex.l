@@ -56,20 +56,20 @@ empty [ \n\r\t]
 "{"       { yylval = new ast_node( "LC", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return LC; }
 "}"       { yylval = new ast_node( "RC", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return RC; }
 
-"+"       { yylval = new ast_node("PLUS", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return PLUS; }
-"-"       { yylval = new ast_node("MINUS", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return MINUS; }
-"*"       { yylval = new ast_node("MUL", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return MUL; }
-"/"       { yylval = new ast_node("DIV", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return DIV; }
-"&&"      { yylval = new ast_node("AND", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return AND; }
-"||"      { yylval = new ast_node("OR", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return OR; }
-"!"       { yylval = new ast_node("NOT", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return NOT; }
-"="       { yylval = new ast_node("ASSIGN", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return ASSIGN; }
-"<"       { yylval = new ast_node("LT", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return LT; }
-"<="      { yylval = new ast_node("LE", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return LE; }
-">"       { yylval = new ast_node("GT", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return GT; }
-">="      { yylval = new ast_node("GE", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return GE; }
-"!="      { yylval = new ast_node("NE", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return NE; }
-"=="      { yylval = new ast_node("EQ", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return EQ; }
+"+"       { yylval = new ast_node("PLUS", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return PLUS; }
+"-"       { yylval = new ast_node("MINUS", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return MINUS; }
+"*"       { yylval = new ast_node("MUL", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return MUL; }
+"/"       { yylval = new ast_node("DIV", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return DIV; }
+"&&"      { yylval = new ast_node("AND", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return AND; }
+"||"      { yylval = new ast_node("OR", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return OR; }
+"!"       { yylval = new ast_node("NOT", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return NOT; }
+"="       { yylval = new ast_node("ASSIGN", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return ASSIGN; }
+"<"       { yylval = new ast_node("LT", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return LT; }
+"<="      { yylval = new ast_node("LE", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return LE; }
+">"       { yylval = new ast_node("GT", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return GT; }
+">="      { yylval = new ast_node("GE", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return GE; }
+"!="      { yylval = new ast_node("NE", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return NE; }
+"=="      { yylval = new ast_node("EQ", TERMINAL_WITHOUT_ATTRIBUTE, yytext, yylineno ); return EQ; }
 
 "."       { yylval = new ast_node( "DOT", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return DOT; }
 ";"       { yylval = new ast_node( "SEMI", TERMINAL_WITHOUT_ATTRIBUTE, "", yylineno ); return SEMI; }
