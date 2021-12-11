@@ -89,7 +89,7 @@ public:
         swap_flag = false;
     }
 
-    string to_string() {
+    void to_string() {
         switch (tac_type) {
             case ASSIGN:
                 printf("%s := %s\n", operands[RESULT].c_str(), operands[ARG1].c_str());
@@ -112,6 +112,8 @@ public:
                 printf("%s%s := %s \n", op.c_str(), operands[RESULT].c_str(), operands[ARG1].c_str());
                 break;
             case FUNC: // op: FUNCTION
+                printf("%s %s :\n",op.c_str(), operands[RESULT].c_str());
+                break;
             case LABEL: // op: LABEL
                 printf("%s %s :\n", op.c_str(), operands[ARG1].c_str());
                 break;
@@ -223,6 +225,7 @@ void ir_ext_def(ast_node *node){
     }
     if(node->children[1]->name.compare("FunDec") == 0){
         ir_func(node->children[1], type);
+        //TODO check whether need a func id
         ir_comp_stmt(node->children[2]);
     }
 }
@@ -247,6 +250,7 @@ Type *ir_specifier(ast_node *node){
     if(node->children[0]->name.compare("TYPE") == 0){
         type = typeEntry(node->children[0]);
     }else{
+        //TODO tobe checked whether a global map?
         type = structSpecifierEntry(node->children[0]);
     }
     return type;
@@ -568,6 +572,7 @@ void ir_dec(ast_node *node, Type *type){
         string tp = Tmp();
         translate_exp(node->children[2], tp);
         check_refer(node->children[2], tp);
+        cout << "xx" << endl;
         append_tac(new Tac(Tac::ASSIGN, "ASSIGN", tp, tac->operands[RESULT]));
     }
 }
@@ -599,7 +604,7 @@ Tac* ir_var_dec(ast_node *node, Type* type){
 
     if (int_vector.size()) { // array
         return new Tac(Tac::DEC, "DEC", Var(), int_vector, name);
-    } else if (equalType(type, new StructureType()), type) { // structure
+    } else if ( type->name == "Structure") { // structure
         return new Tac(Tac::DEC, "DEC", Var(), vector<int>{}, name);
     } else {
         Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", val2str(0).c_str(), Var());

@@ -38,7 +38,7 @@ unordered_map<int, string> error_info =
                 {16, "only int can do boolean operation"}
         };
 
-bool error_flag;
+bool error_flag = 0;
 
 /*
  *=======================
@@ -388,6 +388,7 @@ bool semanticEntry(ast_node *root) {
     (*write_args).push_back(new PrimitiveType("int"));
     SymbolElement *writeEntry = new SymbolElement("", new PrimitiveType("int"), 0, 0, "FUNC", write_args);
     symbolTable.insertEntry("FUNC_write", writeEntry);
+//    symbolTable.showTable();
     extDefListEntry(root->children[0]);
     return error_flag;
 }
@@ -626,12 +627,6 @@ Type *ExpressionEntry(ast_node *node) {
                     left_exp_type->lVal = (left_exp_type->lVal || right_exp_type->lVal);
                     return left_exp_type;
                 } else {
-//                    ArrayType* test = dynamic_cast<ArrayType*>(left_exp_type);
-//                    if(test == nullptr){
-//                        cout << "goal" << endl;
-//                    }
-//                    PrimitiveType * mytype = transArrayTypeToPrimitive(dynamic_cast<ArrayType*>(right_exp_type));
-
                     reportError(7, node->line_num, "");
                     return createEmptyType(0);
                 }
