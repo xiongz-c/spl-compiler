@@ -572,27 +572,8 @@ void translate_exp(ast_node *exp, string& place) {
             }else if(root_type->name.compare(0,str_structure.size(),str_structure) == 0){
                 times += cal_struct_size(root_type);
             }
-            //cout << "call :" << to_string(times*cal_real_offset(vec,dim)) << endl;
             append_tac(new Tac(Tac::ARITH,"+",t1,"#"+ to_string(times*cal_real_offset(vec,dim)),t2));
             place = t2;
-
-
-//            string t1 = Tmp();
-//            translate_exp(exp->children[0], t1);
-//            string t2 = Tmp();
-//            translate_exp(exp->children[2], t2);
-//            cout << exp->children[0]->value << " xxx " <<  exp->children[0]->name << endl;
-//            Type* base = ExpressionEntry(exp);
-//            string t3 = Tmp();
-//            append_tac(new Tac(Tac::ARITH, "*", t2, "#" + to_string(base->type_size()), t3));
-//
-//            if (typeid(base) == typeid(ArrayType)) {
-//                append_tac(new Tac(Tac::ARITH, "+", t1, t3, place));
-//            } else {
-//                string t4 = Tmp();
-//                append_tac(new Tac(Tac::ARITH, "+", t1, t3, t4));
-//                place = t4;
-//            }
         }
     }else if (child->name == "MINUS") {
         string tp = Tmp();
