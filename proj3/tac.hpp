@@ -22,13 +22,6 @@ float str_to_num(string value, bool type){
     else // else parse to float
         return atof(value.c_str());
 }
-string val2str(int num) {
-    if (num > 0) {
-        return "t" + to_string(num);
-    } else {
-        return "#" + to_string(-num);
-    }
-}
 
 
 class Tac {
@@ -631,7 +624,7 @@ Tac* ir_var_dec(ast_node *node, Type* type){
     } else if (type->name == "Structure") { // structure
         return new Tac(Tac::DEC, "DEC", v, vector<int>{}, name);
     } else {
-        Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", val2str(0).c_str(), v);
+        Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", "#0", v);
         tac->operands[ARG2] = name;
         return tac;
     }
