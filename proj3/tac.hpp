@@ -11,10 +11,7 @@ int tmp_cnt, var_cnt, label_cnt;
 string Tmp(){return "t" + to_string(++tmp_cnt);}
 string Var(){return "v" + to_string(++var_cnt);}
 string Label(){return "label" + to_string(++label_cnt);}
-int *genlist(int id){
-    int *label = new int(id);
-    return label;
-}
+
 void remove_tmp(){tmp_cnt--;}
 float str_to_num(string value, bool type){
     if (!type) // DEFAULT: parse to int when false
@@ -123,9 +120,7 @@ public:
 
 vector<Tac*> tac_vector;
 unordered_map<string, string> value_info; // key是变量名，value是变量编号
-unordered_map<string, Tac*> type_info;// key 是变量编号，value是tac ——用变量编号就不用考虑scope了
-vector<int> cont, br;
-extern SymbolTable glo_symbolTable;
+extern SymbolTable glo_symbolTable; // 扩展符号表 for proj3
 string Tac::append_self() {
     if(this->tac_type == Tac::ARITH || this->tac_type == Tac::ASSIGN){
         if(this->operands[RESULT].empty() || this->operands[ARG1].empty()){
@@ -179,8 +174,6 @@ void check_refer(ast_node* exp, string& place) {
 void ir_init() {
     tac_vector.clear();
     value_info.clear();
-    cont.clear();
-    br.clear();
 }
 
 /**
