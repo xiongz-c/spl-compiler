@@ -64,6 +64,9 @@ public:
     virtual ~Type() = default;
 
     int type_size() {
+        if(this->name == "Primitive_int"){
+            return 4;
+        }
         return 0;
     }
 
@@ -136,7 +139,8 @@ public:
         int offset = 0;
         for (int i = 0; i < fields.size(); ++i) {
             Type *field = fields[i];
-            if (field->name == member)
+
+            if (field->filed_name == member)
                 break;
             offset += field->type_size();
         }
@@ -528,6 +532,8 @@ Type *checkFunc(ast_node *node, vector<Type *> *args) {
         }else{
             for(int i = 0; i < args->size() ; i++){
                 if(!equalType((*args)[i],info_FUNC->args[i])){
+                    cout << info_FUNC->args[i]->name << endl;
+                    cout << (*args)[i]->name << endl;
                     reportError(9, node->line_num,
                                 "argument type for compare in function "+node->value);
                     break;
@@ -804,8 +810,7 @@ Type *paramDecEntry(ast_node *node) {
     if (node->children_num <= 0)return createEmptyType(0);
     Type *spec_type = specifierEntry(node->children[0]);
     D(cerr << "lineno: " << __LINE__ << " " << node->printNode() << endl;)
-    varDecEntry(node->children[1], spec_type);
-    return spec_type;
+    return varDecEntry(node->children[1], spec_type);
 }
 
 Type *varDecEntry(ast_node *node, Type *spec_type) {
@@ -838,6 +843,7 @@ pair<string, SymbolElement *> createTableInfo(ast_node *node, Type *type, string
     if (attr == "VAR") {
         D(cerr << "lineno: " << __LINE__ << " node value : " << node->value << endl;)
         type->lVal = 1;
+        Type* copy_type;
         SymbolElement *element = new SymbolElement(node->value, type, symbolTable.scope, node->line_num, "VAR");
         string id = "VAR_" + node->value;
         D(cerr << "element info: " << " entry ID: " << id << endl;)

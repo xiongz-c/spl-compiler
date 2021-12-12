@@ -5,12 +5,53 @@
 #define RESULT 2
 using namespace std;
 
+unordered_map<string,int> ref_map;
 
 int tmp_cnt, var_cnt, label_cnt;
 
 string Tmp(){return "t" + to_string(++tmp_cnt);}
 string Var(){return "v" + to_string(++var_cnt);}
 string Label(){return "label" + to_string(++label_cnt);}
+Type* get_array_type(Type* type);
+int cal_array_size(Type *type);
+int cal_struct_size(Type *type);
+Type* get_array_dim(Type* type, vector<int> * vec);
+
+int cal_array_size(Type *type){
+    if(dynamic_cast<ArrayType*>(type) == NULL) return 0;
+    vector<int> * dim = new vector<int>;
+    Type* root_type = get_array_dim(type, dim);
+    int cnt = 1;
+    for(int i = 0; i < dim->size() ;i++){
+        cnt *= (*dim)[i];
+    }
+    if(dynamic_cast<StructureType*>(root_type) != NULL){
+        return cnt* cal_struct_size(root_type);
+    }else{
+        return cnt*4;
+    }
+
+}
+
+
+int cal_struct_size(Type *type){
+    if(dynamic_cast<StructureType*>(type) == NULL) return 0;
+    int res = 0;
+    StructureType* tmp = dynamic_cast<StructureType*>(type);
+    for(int i = 0; i < tmp->field_size ;i++){
+        Type* child = tmp->fields[i];
+        string str_Array = "Array";
+        string str_structure = "Structure";
+        if (child->name == "Primitive_int"){
+            res += 4;
+        }else if(child->name.compare(0,str_structure.size(),str_structure) == 0){
+            res += cal_struct_size(child);
+        }else if (child->name.compare(0,str_Array.size(),str_Array) == 0){
+            res += cal_array_size(child);
+        }
+    }
+    return res;
+}
 
 void remove_tmp(){tmp_cnt--;}
 float str_to_num(string value, bool type){
@@ -74,8 +115,9 @@ public:
             this->suffix.push_back(tot);
             tot *= arr[i];
         }
+
         // todo 不确定需不需要size vector, 先不操作
-        this->operands[ARG1] = std::to_string(tot);
+        this->operands[ARG1] = std::to_string(cal_array_size(glo_symbolTable.searchEntry(name,"VAR")->type));
         swap_flag = false;
     }
 
@@ -172,6 +214,9 @@ void check_refer(ast_node* exp, string& place) {
 }
 
 void ir_init() {
+    for(auto item = glo_symbolTable.symbolTableInstance.begin(); item != glo_symbolTable.symbolTableInstance.end(); item++){
+        ref_map[item->first] = 0;
+    }
     tac_vector.clear();
     value_info.clear();
 }
@@ -187,17 +232,25 @@ Type *ir_specifier(ast_node *node);
 void ir_func(ast_node *node);
 void ir_comp_stmt(ast_node *node);
 void ir_def_list(ast_node *node);
+Type* ir_structSpecifier(ast_node * node);
 void ir_def(ast_node *node);
 void ir_dec_list(ast_node *node, Type *type);
 void ir_stmt(ast_node *node);
 void ir_stmt_list(ast_node *node);
 void ir_dec(ast_node *node, Type *type);
-Tac* ir_var_dec(ast_node *node, Type* type);
+Tac* ir_var_dec(ast_node *node, Type* type, bool isParam);
 void ir_var_list(ast_node *node);
 void ir_param_dec(ast_node *node);
 void translate_cond_exp(ast_node *exp, string lb_t, string lb_f);
 void translate_exp(ast_node *exp, string& place);
 void translate_args(ast_node *exp, list<string>* arg_list);
+int count_structure( StructureType* st_type);
+int handle_array_location(ast_node* node);
+string get_real_location(ast_node* node, vector<int> * vec);
+
+int cal_real_offset( vector<int> * vec,vector<int> * dim );
+
+
 
 /**
  * Program: ExtDefList
@@ -236,7 +289,7 @@ void ir_ext_def(ast_node *node){
 }
 
 void ir_ext_dec_list(ast_node *node, Type *type){
-    Tac *tac = ir_var_dec(node->children[0], type);
+    Tac *tac = ir_var_dec(node->children[0], type, false);
     while(node->children_num > 1){
         node = node->children[2];
         ir_ext_dec_list(node, type);
@@ -257,9 +310,15 @@ Type *ir_specifier(ast_node *node){
         type = typeEntry(node->children[0]);
     }else{
         //TODO tobe checked whether a global map?
-        type = structSpecifierEntry(node->children[0]);
+        type = ir_structSpecifier(node->children[0]);
     }
     return type;
+}
+
+
+Type* ir_structSpecifier(ast_node * node){
+    SymbolElement* res = glo_symbolTable.searchEntry(node->children[1]->value,"STRUCT");
+    return res->type;
 }
 
 void ir_func(ast_node *node){
@@ -411,10 +470,13 @@ void translate_exp(ast_node *exp, string& place) {
     } else if (child->name == "ID") {
         if (exp->children.size() == 1) {
             place = get_ir(child->value);
+
             SymbolElement * target_se = glo_symbolTable.searchEntry(child->value,"VAR");
             Type* expType = target_se->type;
             // TODO handle array
-            if (expType->name == "Structure") place = "&" + place;
+            if (ref_map["VAR_"+child->value]) {
+                place = "&" + place;
+            }
             remove_tmp();
         } else {
             // function invoke
@@ -479,43 +541,58 @@ void translate_exp(ast_node *exp, string& place) {
             // Exp Dot ID
             string t1 = Tmp();
             translate_exp(exp->children[0], t1);
-
-            Type* ttype = ExpressionEntry(exp->children[0]);
-
+            string left_name =  exp->children[0]->children[0]->value;
+            Type* ttype = glo_symbolTable.searchEntry(left_name,"VAR")->type;
             int offset = dynamic_cast<StructureType *>(ttype)->structure_offset(exp->children[2]->value);
-
-            if (ttype->is_refer) {
-                string t2 = Tmp();
-                if (offset) append_tac(new Tac(Tac::ARITH, "+", t1, "#" + to_string(offset), t2));
-                else append_tac(new Tac(Tac::ASSIGN, "ASSIGN", t1, t2));
-                t1 = t2;
-            }
-            else {
-                if (offset) {
-                    string t2 = Tmp();
-                    append_tac(new Tac(Tac::ARITH, "+", t1, "#" + to_string(offset), t2));
-                    t1 = t2;
-                }
-            }
+            string t2 = Tmp();
+            if (offset) append_tac(new Tac(Tac::ARITH, "+", t1, "#" + to_string(offset), t2));
+            else append_tac(new Tac(Tac::ASSIGN, "ASSIGN", t1, t2));
+            t1 = t2;
             place = t1;
         } else if (sname == "LB") {
             // Exp LB Exp RB
+            vector<int> * vec = new vector<int>;
+            vector<int> * dim = new vector<int>;
+            string var_name = get_real_location(exp,vec);
+
+            Type* tmp = glo_symbolTable.searchEntry(var_name,"VAR")->type;
+            Type* root_type = get_array_dim(tmp,dim);
             string t1 = Tmp();
-            translate_exp(exp->children[0], t1);
-            string t2 = Tmp();
-            translate_exp(exp->children[2], t2);
-
-            Type* base = ExpressionEntry(exp);
-            string t3 = Tmp();
-            append_tac(new Tac(Tac::ARITH, "*", t2, "#" + to_string(base->type_size()), t3));
-
-            if (typeid(base) == typeid(ArrayType)) {
-                append_tac(new Tac(Tac::ARITH, "+", t1, t3, place));
-            } else {
-                string t4 = Tmp();
-                append_tac(new Tac(Tac::ARITH, "+", t1, t3, t4));
-                place = t4;
+            t1 = get_ir(var_name);
+            if (ref_map["VAR_"+var_name]) {
+                t1 = "&" + t1;
             }
+            string t2 = Tmp();
+            string str_Array = "Array";
+            string str_structure = "Structure";
+
+            int times = 0;
+            if (root_type->name == "Primitive_int"){
+                times += 4;
+            }else if(root_type->name.compare(0,str_structure.size(),str_structure) == 0){
+                times += cal_struct_size(root_type);
+            }
+            //cout << "call :" << to_string(times*cal_real_offset(vec,dim)) << endl;
+            append_tac(new Tac(Tac::ARITH,"+",t1,"#"+ to_string(times*cal_real_offset(vec,dim)),t2));
+            place = t2;
+
+
+//            string t1 = Tmp();
+//            translate_exp(exp->children[0], t1);
+//            string t2 = Tmp();
+//            translate_exp(exp->children[2], t2);
+//            cout << exp->children[0]->value << " xxx " <<  exp->children[0]->name << endl;
+//            Type* base = ExpressionEntry(exp);
+//            string t3 = Tmp();
+//            append_tac(new Tac(Tac::ARITH, "*", t2, "#" + to_string(base->type_size()), t3));
+//
+//            if (typeid(base) == typeid(ArrayType)) {
+//                append_tac(new Tac(Tac::ARITH, "+", t1, t3, place));
+//            } else {
+//                string t4 = Tmp();
+//                append_tac(new Tac(Tac::ARITH, "+", t1, t3, t4));
+//                place = t4;
+//            }
         }
     }else if (child->name == "MINUS") {
         string tp = Tmp();
@@ -526,6 +603,50 @@ void translate_exp(ast_node *exp, string& place) {
         translate_exp(exp->children[1], place);
     }
 }
+
+string get_real_location(ast_node* node, vector<int> * vec){
+    if(node->children[0]->name == "ID")return node->children[0]->value;
+    if(node->children[2]->children[0]->name == "INT"){
+        vec->push_back(atoi(node->children[2]->children[0]->value.c_str()));
+    }
+
+
+    return get_real_location(node->children[0],vec);
+}
+
+Type* get_array_dim(Type* type, vector<int> * vec){
+    if( dynamic_cast<ArrayType*>(type) == NULL){
+        return type;
+    }else{
+        vec->push_back(dynamic_cast<ArrayType*>(type)->size);
+        return get_array_dim(dynamic_cast<ArrayType*>(type)->base,vec);
+    }
+}
+
+Type* get_array_type(Type* type){
+    if( dynamic_cast<ArrayType*>(type) == NULL){
+        return type;
+    }else{
+        return get_array_type(dynamic_cast<ArrayType*>(type)->base);
+    }
+}
+
+
+int cal_real_offset( vector<int> * vec,vector<int> * dim ){
+    int res = 0;
+    int po = 1;
+    for (int i = vec->size()-1; i >0  ; i--) {
+        int tmp = (*vec)[i];
+        for(int j = po; j < dim->size() ; j++){
+            tmp *= (*dim)[j];
+        }
+        po++;
+        res += tmp;
+    }
+    res += (*vec)[0];
+    return res;
+}
+
 
 /**
  * Args: Exp COMMA Args
@@ -575,7 +696,7 @@ void translate_cond_exp(ast_node *exp, string lb_t, string lb_f){
  * Dec: VarDec ASSIGN Exp
  */
 void ir_dec(ast_node *node, Type *type){
-    Tac *tac = ir_var_dec(node->children[0], type); // 对vardec的部分 generate
+    Tac *tac = ir_var_dec(node->children[0], type, false); // 对vardec的部分 generate
     put_ir(tac->operands[ARG2], tac->operands[RESULT]); //把变量放进变量表
     if (tac->tac_type == Tac::DEC) tac->append_self();
     if(node->children_num > 1){ // 第二种情况，右边有表达式
@@ -590,7 +711,7 @@ void ir_dec(ast_node *node, Type *type){
  * VarDec: ID
  * VarDec: VarDec LB INT RB
  */
-Tac* ir_var_dec(ast_node *node, Type* type){
+Tac* ir_var_dec(ast_node *node, Type* type,bool isParam){
     vector<ast_node*> ast_vector;
     ast_vector.push_back(node);
     vector<int> int_vector;
@@ -599,6 +720,7 @@ Tac* ir_var_dec(ast_node *node, Type* type){
         ast_node *now = ast_vector.back();
         if (now->children[0]->name == "ID") { // dec var
             name = now->children[0]->value;
+
             ast_vector.pop_back();
             while (!ast_vector.empty()) {
                 ast_node *nn = ast_vector.back();
@@ -613,14 +735,26 @@ Tac* ir_var_dec(ast_node *node, Type* type){
 
     string v = Var();
     if (int_vector.size()) { // array
+        if(!isParam)ref_map["VAR_"+name] = 1;
         return new Tac(Tac::DEC, "DEC", v, int_vector, name);
     } else if (type->name == "Structure") { // structure
-        return new Tac(Tac::DEC, "DEC", v, vector<int>{}, name);
+        if(!isParam)ref_map["VAR_"+name] = 1;
+        StructureType* st_type = dynamic_cast<StructureType*>(type);
+        int cnt = count_structure(st_type);
+        return new Tac(Tac::DEC, "DEC", to_string(cnt),name,v);
     } else {
         Tac* tac = new Tac(Tac::ASSIGN,"ASSIGN", "#0", v);
         tac->operands[ARG2] = name;
         return tac;
     }
+}
+
+int count_structure( StructureType* st_type){
+    int cnt = 0;
+    for(int i = 0; i < st_type->field_size ; i++){
+        cnt += 4;
+    }
+    return cnt;
 }
 
 
@@ -651,7 +785,7 @@ void ir_var_list(ast_node *node){
  */
 void ir_param_dec(ast_node *node){
     Type *type = ir_specifier(node->children[0]);
-    Tac *tac = ir_var_dec(node->children[1], type);
+    Tac *tac = ir_var_dec(node->children[1], type, true);
     tac->tac_type = Tac::PARAM;
     tac->op = "PARAM";
     put_ir(tac->operands[ARG2], append_tac(tac));
