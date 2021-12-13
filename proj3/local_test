@@ -1,24 +1,51 @@
-int add(int temp[2])
-{
-    return (temp[0] + temp[1]);
-}
-
 int main()
 {
-    int op[2];
-    int r[1][2];
-    int i = 0, j = 0;
-    while (i < 2)
-    {
-        while (j < 2)
-        {
-            op[j] = i + j;
-            j = j + 1;
+    int month, year;
+    year = read();
+    month = read();
+    if(year == (year / 100 * 100)){
+        if(year == (year / 400 * 400)){
+            if(month == 2){
+                write(29);
+            }
+            else if(month == (month / 2 * 2)){
+                write(30);
+            }
+            else
+                write(31);
+        }else {
+            if(month == 2){
+                write(28);
+            }
+            else if(month == (month / 2 * 2)){
+                write(30);
+            }
+            else {
+                write(31);
+            }
         }
-        r[0][i] = add(op);
-        write(r[0][i]);
-        i = i + 1;
-        j = 0;
+    }
+    else if(year == (year/4 * 4)){
+        if(month == 2){
+            write(29);
+        }
+        else if(month == (month / 2 * 2)){
+            write(30);
+        }
+        else {
+            write(31);
+        }
+    }
+    else{
+        if(month == 2){
+            write(28);
+        }
+        else if(month == (month / 2 * 2)){
+            write(30);
+        }
+        else {
+            write(31);
+        }
     }
     return 0;
 }

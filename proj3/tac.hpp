@@ -261,8 +261,8 @@ bool check_exit_tac(vector<Tac*>::iterator it){
 void ir_starter(ast_node *root) {
     ir_init();
     ir_ext_def_list(root->children[0]);
-    ir_generate();
     optimize();
+    ir_generate();
 }
 
 /**
@@ -786,7 +786,7 @@ void optimize(){
         if (tac->tac_type == Tac::GOTO) { // goto optimize
             auto itr_tmp2 = ++itr_tmp;
             if (!check_exit_tac(itr_tmp2)) {
-                if ((*itr_tmp2)->tac_type == Tac::LABEL && tac->operands[ARG1] == (*itr_tmp2)->operands[ARG1]){
+                if ((*itr_tmp2)->tac_type == Tac::LABEL && tac->operands[RESULT] == (*itr_tmp2)->operands[RESULT]){
                     tac_vector.erase(itr++);
                     continue;
                 }
@@ -798,10 +798,11 @@ void optimize(){
                 if (!check_exit_tac(itr_tmp4)) {
                     if ((*itr_tmp3)->tac_type == Tac::GOTO
                         && (*itr_tmp4)->tac_type == Tac::LABEL
-                        && tac->operands[RESULT] == (*itr_tmp4)->operands[ARG1]) {
-                        tac->operands[RESULT] = (*itr_tmp3)->operands[ARG1];
-                        tac->op = cond_reverse[tac->op];
-                        tac_list.erase(itr_tmp3);
+                        && tac->operands[RESULT] == (*itr_tmp4)->operands[RESULT]) {
+                        tac->operands[RESULT] = (*itr_tmp3)->operands[RESULT];
+                        string rever_op = cond_reverse[tac->op];
+                        tac->op = rever_op;
+                        tac_vector.erase(itr_tmp3);
                     }
                 }
             }
@@ -814,17 +815,17 @@ void optimize(){
     list<string> labels;
     for (auto itr = tac_vector.begin(); itr != tac_vector.end(); ++itr) {
         tac = *itr;
-        if (tac->tac_type == TAC::GOTO)
-            labels.push_back(tac->operands[ARG1]);
-        else if (tac->tac_type == TAC::IF)
+        if (tac->tac_type == Tac::GOTO)
+            labels.push_back(tac->operands[RESULT]);
+        else if (tac->tac_type == Tac::IF)
             labels.push_back(tac->operands[RESULT]);
     }
     auto it = tac_vector.begin();
     while (it != tac_vector.end()) {
         tac = *it;
-        if (tac->tac_type == TAC::LABEL) {
-            if (find(labels.begin(), labels.end(), tac->operands[ARG1]) == labels.end()) {
-                tac_list.erase(it++);
+        if (tac->tac_type == Tac::LABEL) {
+            if (find(labels.begin(), labels.end(), tac->operands[RESULT]) == labels.end()) {
+                tac_vector.erase(it++);
                 continue;
             }
         }
