@@ -6,6 +6,9 @@
 using namespace std;
 
 unordered_map<string,int> ref_map;
+unordered_map<string, string> cond_reverse {
+   {"==","!="}, {"!=","=="}, {">", "<="}, {"<=",">"}, {"<",">="}, {">=","<"}
+};
 
 int tmp_cnt, var_cnt, label_cnt;
 
@@ -67,8 +70,7 @@ public:
     string op;
     string operands[3]; // {ARG1,ARG2,RESULT}
     vector<int> suffix; // suffix mem
-    vector<int> sizes; //
-    bool swap_flag = false;
+    vector<int> sizes;
     Type *type;
     enum TacType{
         LABEL, FUNC,
@@ -81,20 +83,17 @@ public:
         EXIT} tac_type;
     Tac(TacType tac_type) {
         this->tac_type = tac_type;
-        swap_flag = false;
     }
     Tac(TacType tac_type, const string& op, const string& arg1) {
         this->tac_type = tac_type;
         this->op = op;
         this->operands[RESULT] = arg1;
-        swap_flag = false;
     }
     Tac(TacType tac_type, const string& op, const string& arg1, const string& res) {
         this->tac_type = tac_type;
         this->op = op;
         this->operands[ARG1] = arg1;
         this->operands[RESULT] = res;
-        swap_flag = false;
     }
     Tac(TacType tac_type, const string& op, const string& arg1, const string& arg2, const string& res) {
         this->tac_type = tac_type;
@@ -102,7 +101,6 @@ public:
         this->operands[ARG1] = arg1;
         this->operands[ARG2] = arg2;
         this->operands[RESULT] = res;
-        swap_flag = false;
     }
     Tac(TacType tac_type, const string& op, const string& res, vector<int> arr, string name) {
         this->tac_type = tac_type;
@@ -118,7 +116,6 @@ public:
 
         // todo 不确定需不需要size vector, 先不操作
         this->operands[ARG1] = std::to_string(cal_array_size(glo_symbolTable.searchEntry(name,"VAR")->type));
-        swap_flag = false;
     }
 
     void to_string() {
@@ -149,7 +146,7 @@ public:
             case LABEL: // op: LABEL
                 printf("%s %s :\n", op.c_str(), operands[RESULT].c_str());
                 break;
-            case EXIT: // last line. maybe for ir optimize
+            case EXIT: // last line of function. for ir optimize
                 printf("\n");
                 break;
             default:// op: GOTO/RETURN/ARG/PARAM/READ/WRITE
@@ -247,8 +244,14 @@ void translate_args(ast_node *exp, list<string>* arg_list);
 int count_structure( StructureType* st_type);
 int handle_array_location(ast_node* node);
 string get_real_location(ast_node* node, vector<int> * vec);
-
 int cal_real_offset( vector<int> * vec,vector<int> * dim );
+void optimize();
+
+bool check_exit_tac(vector<Tac*>::iterator it){
+    if (it == tac_vector.end() || (*it)->tac_type == Tac::EXIT)
+        return true;
+    return false;
+}
 
 
 
@@ -259,6 +262,7 @@ void ir_starter(ast_node *root) {
     ir_init();
     ir_ext_def_list(root->children[0]);
     ir_generate();
+    optimize();
 }
 
 /**
@@ -285,6 +289,7 @@ void ir_ext_def(ast_node *node){
         ir_func(node->children[1]);
         //TODO check whether need a func id
         ir_comp_stmt(node->children[2]);
+        append_tac(new Tac(Tac::EXIT));
     }
 }
 
@@ -770,4 +775,59 @@ void ir_param_dec(ast_node *node){
     tac->tac_type = Tac::PARAM;
     tac->op = "PARAM";
     put_ir(tac->operands[ARG2], append_tac(tac));
+}
+
+void optimize(){
+    // optimize goto
+    auto itr = tac_vector.begin();
+    while(itr != tac_vector.end()) {
+        Tac* tac = *itr;
+        auto itr_tmp = itr;
+        if (tac->tac_type == Tac::GOTO) { // goto optimize
+            auto itr_tmp2 = ++itr_tmp;
+            if (!check_exit_tac(itr_tmp2)) {
+                if ((*itr_tmp2)->tac_type == Tac::LABEL && tac->operands[ARG1] == (*itr_tmp2)->operands[ARG1]){
+                    tac_vector.erase(itr++);
+                    continue;
+                }
+            }
+        } else if (tac->tac_type == Tac::IF) { // if cond goto optimize
+            auto itr_tmp3 = ++itr_tmp;
+            if (!check_exit_tac(itr_tmp3)) {
+                auto itr_tmp4 = ++itr_tmp;
+                if (!check_exit_tac(itr_tmp4)) {
+                    if ((*itr_tmp3)->tac_type == Tac::GOTO
+                        && (*itr_tmp4)->tac_type == Tac::LABEL
+                        && tac->operands[RESULT] == (*itr_tmp4)->operands[ARG1]) {
+                        tac->operands[RESULT] = (*itr_tmp3)->operands[ARG1];
+                        tac->op = cond_reverse[tac->op];
+                        tac_list.erase(itr_tmp3);
+                    }
+                }
+            }
+        }
+        itr++;
+    }
+
+    // optimize label
+    Tac* tac;
+    list<string> labels;
+    for (auto itr = tac_vector.begin(); itr != tac_vector.end(); ++itr) {
+        tac = *itr;
+        if (tac->tac_type == TAC::GOTO)
+            labels.push_back(tac->operands[ARG1]);
+        else if (tac->tac_type == TAC::IF)
+            labels.push_back(tac->operands[RESULT]);
+    }
+    auto it = tac_vector.begin();
+    while (it != tac_vector.end()) {
+        tac = *it;
+        if (tac->tac_type == TAC::LABEL) {
+            if (find(labels.begin(), labels.end(), tac->operands[ARG1]) == labels.end()) {
+                tac_list.erase(it++);
+                continue;
+            }
+        }
+        it++;
+    }
 }
