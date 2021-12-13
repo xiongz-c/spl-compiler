@@ -179,7 +179,7 @@ int cal_struct_size(Type *type){
 
 #### Array
 
-Unlike structure, array is calculated as the product of the space occupied by its own data structure and the length of space it opens up.
+Unlike structure, array is calculated as the product of the space occupied by its own data structure and the length of space it opens up. However only `int` can be used for addressing, which means `a[1][1]` is available but `a[i][j]` is not.
 
 ```cpp
 Type* get_array_dim(Type* type, vector<int> * vec){
