@@ -15,6 +15,18 @@ int tmp_cnt, var_cnt, label_cnt;
 string Tmp(){return "t" + to_string(++tmp_cnt);}
 string Var(){return "v" + to_string(++var_cnt);}
 string Label(){return "label" + to_string(++label_cnt);}
+
+int extractINT(string tmp){
+    if(tmp == ""){
+        return 0;
+    }
+    if(tmp[0] =='#'){
+        string res = tmp.substr(1);
+        return atoi(res.c_str());
+    }
+    return 0;
+}
+
 Type* get_array_type(Type* type);
 int cal_array_size(Type *type);
 int cal_struct_size(Type *type);
@@ -246,6 +258,8 @@ int handle_array_location(ast_node* node);
 string get_real_location(ast_node* node, vector<int> * vec);
 int cal_real_offset( vector<int> * vec,vector<int> * dim );
 void optimize();
+void optimize_const();
+pair<string,int> check_optimizable();
 
 bool check_exit_tac(vector<Tac*>::iterator it){
     if (it == tac_vector.end() || (*it)->tac_type == Tac::EXIT)
@@ -253,6 +267,93 @@ bool check_exit_tac(vector<Tac*>::iterator it){
     return false;
 }
 
+int cal_op_res(int a1,int a2, string op){
+    if(op == "-"){
+        return a1-a2;
+    }else if(op == "+"){
+        return a1+a2;
+    }else if(op == "*"){
+        return a1*a2;
+    }else if(op == "/"){
+        return a1/a2;
+    }
+    return 0;
+}
+
+pair<string,int> check_optimizable(){
+    Tac* tac;
+    auto it = tac_vector.begin();
+    int cnt = 1;
+    while (it != tac_vector.end()) {
+        tac = *it;
+        if(tac->operands[RESULT][0] == 't' && (tac->tac_type == Tac::ASSIGN || tac->tac_type == Tac::ARITH) ){
+            // t0 = v1 - v1
+            if(tac->op == "-" && tac->operands[ARG1] == tac->operands[ARG2]){
+
+                tac_vector.erase(it);
+                return make_pair(tac->operands[RESULT],0);
+            }
+
+            //cout << "cnt no " << cnt << tac->operands[ARG1] << " xxx " << tac->operands[ARG2] << endl;
+            // both const
+            if(tac->operands[ARG1] !="" && tac->operands[ARG1][0] == '#' && tac->operands[ARG2] !="" && tac->operands[ARG2][0] == '#'){
+                int tmp1 = extractINT(tac->operands[ARG1]);
+                int tmp2 = extractINT(tac->operands[ARG2]);
+                tac_vector.erase(it);
+                return make_pair(tac->operands[RESULT],cal_op_res(tmp1,tmp2,tac->op));
+            }
+
+            if(tac->operands[ARG2] == "" && tac->operands[ARG1] !="" && tac->operands[ARG1][0] == '#'){
+                tac_vector.erase(it);
+                return make_pair(tac->operands[RESULT], extractINT(tac->operands[ARG1]));
+            }
+
+//
+//            int con1 = 0;
+//            int con2 = 0;
+//            if(tac->operands[ARG1] == "" ||tac->operands[ARG1][0] =='#'){
+//                con1 = 1;
+//            }
+//            if(tac->operands[ARG2] == "" ||tac->operands[ARG2][0] =='#'){
+//                con2 = 1;
+//            }
+//            if(con1 && con2){
+//                cout << "No: " << cnt  << " can be optimize : " << tac->operands[RESULT] << " ARG1 " << tac->operands[ARG1]  << " ARG2 " << tac->operands[ARG2]  << endl;
+//            }
+
+        }
+        it++;
+        cnt++;
+    }
+    return make_pair("",0);
+}
+
+void clean_tac_list( pair<string,int> op_info){
+    Tac* tac;
+    auto it = tac_vector.begin();
+    while (it != tac_vector.end()) {
+        tac = *it;
+        if(tac->operands[ARG1] == op_info.first){
+            tac->operands[ARG1] = "#"+to_string(op_info.second);
+        }
+        if(tac->operands[ARG2] == op_info.first){
+            tac->operands[ARG2] = "#"+to_string(op_info.second);
+        }
+        if(tac->operands[RESULT] == op_info.first){
+            tac->operands[RESULT] = "#"+to_string(op_info.second);
+        }
+        it++;
+    }
+}
+
+void optimize_const(){
+    pair<string,int> op_info = check_optimizable();
+    while(op_info.first != ""){
+        clean_tac_list(op_info);
+        op_info = check_optimizable();
+    }
+    return;
+}
 
 
 /**
@@ -262,6 +363,7 @@ void ir_starter(ast_node *root) {
     ir_init();
     ir_ext_def_list(root->children[0]);
     optimize();
+    optimize_const();
     ir_generate();
 }
 
@@ -831,4 +933,21 @@ void optimize(){
         }
         it++;
     }
+
+    // optimize read
+    it = tac_vector.begin();
+    while (it != tac_vector.end()) {
+        tac = *it;
+        if ( tac->tac_type == Tac::READ ) {
+            Tac *tac2 = *(++it);
+            if (tac2->tac_type == Tac::ASSIGN && tac2->operands[ARG1] == tac->operands[RESULT]) {
+                tac->operands[RESULT] = tac2->operands[RESULT];
+                tac_vector.erase(it);
+                continue;
+            }
+        }
+        it++;
+    }
+
+
 }
