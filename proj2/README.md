@@ -1,9 +1,9 @@
-# CS323 Project2 - Report
+# CS323 Project2
 
-```
-Yifei Li 11811905
-Zhuochen Xiong 11811806
-```
+> Yifei Li 11811905
+> 
+> Zhuochen Xiong 11811806
+
 
 # Introduction
 
@@ -42,7 +42,7 @@ public:
 };
 ```
 
-      In the design of Symbol Table, we use the unordered_multimap of C++ STL as the main data structure. Where key is the variable, function and user-defined variable type, and value is the information corresponding to the symbol. The information is mainly the scope information for scope detection, the return type and parameter list of the method, and the content of the user-defined structure. The unordered_multimap can store multiple values with the same key.
+In the design of Symbol Table, we use the unordered_multimap of C++ STL as the main data structure. Where key is the variable, function and user-defined variable type, and value is the information corresponding to the symbol. The information is mainly the scope information for scope detection, the return type and parameter list of the method, and the content of the user-defined structure. The unordered_multimap can store multiple values with the same key.
 
 ### Type Representation
 
