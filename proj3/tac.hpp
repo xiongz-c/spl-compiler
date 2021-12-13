@@ -334,6 +334,9 @@ void clean_tac_list( pair<string,int> op_info){
     auto it = tac_vector.begin();
     while (it != tac_vector.end()) {
         tac = *it;
+        if(tac->operands[RESULT] == op_info.first && (tac->tac_type == Tac::ASSIGN || tac->tac_type == Tac::ARITH)){
+            return;
+        }
         if(tac->operands[ARG1] == op_info.first){
             tac->operands[ARG1] = "#"+to_string(op_info.second);
         }
@@ -612,7 +615,7 @@ void translate_exp(ast_node *exp, string& place) {
     ast_node *child = exp->children[0];
     if (child->name == "INT") {
         place = "#" + child->value;
-        remove_tmp();
+        //remove_tmp();
     } else if (child->name == "ID") {
         if (exp->children.size() == 1) {
             place = get_ir(child->value);
@@ -623,7 +626,7 @@ void translate_exp(ast_node *exp, string& place) {
             if (ref_map["VAR_"+child->value]) {
                 place = "&" + place;
             }
-            remove_tmp();
+            //remove_tmp();
         } else {
             // function invoke
             if (place.empty()) place = Tmp();
