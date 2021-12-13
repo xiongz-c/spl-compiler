@@ -259,8 +259,9 @@ string get_real_location(ast_node* node, vector<int> * vec);
 int cal_real_offset( vector<int> * vec,vector<int> * dim );
 void optimize();
 void optimize_const();
+void reduce_tmp();
 pair<string,int> check_optimizable();
-
+unordered_map<string,int> tmp_occur;
 bool check_exit_tac(vector<Tac*>::iterator it){
     if (it == tac_vector.end() || (*it)->tac_type == Tac::EXIT)
         return true;
@@ -352,7 +353,45 @@ void optimize_const(){
         clean_tac_list(op_info);
         op_info = check_optimizable();
     }
+    for(auto it = tac_vector.begin(); it != tac_vector.end(); it++){
+        Tac *tac = *it;
+        if(tac->operands[ARG1] != "" && tac->operands[ARG1][0] == 't'){
+            tmp_occur[tac->operands[ARG1]]++;
+        }
+        if(tac->operands[ARG2] != "" && tac->operands[ARG2][0] == 't'){
+            tmp_occur[tac->operands[ARG2]]++;
+        }
+        if(tac->operands[RESULT] != "" && tac->operands[RESULT][0] == 't'){
+            tmp_occur[tac->operands[RESULT]]++;
+        }
+    }
+    reduce_tmp();
     return;
+}
+
+void reduce_tmp(){
+    auto it1 = tac_vector.begin();
+    auto it2 = it1+1;
+    while (it1 != tac_vector.end() && it2 != tac_vector.end()){
+        Tac * tac1 = *it1;
+        Tac * tac2 = *it2;
+        if(tac1->tac_type == Tac::ARITH && tac2->tac_type == Tac::ASSIGN){
+            if(tac1->operands[RESULT] == tac2->operands[ARG1] && tac2->operands[ARG1] != ""
+            && tac2->operands[ARG1][0] == 't'
+            && tmp_occur[tac2->operands[ARG1]] == 2){
+                tac2->operands[ARG1] = tac1->operands[ARG1];
+                tac2->operands[ARG2] = tac1->operands[ARG2];
+                tac2->tac_type = Tac::ARITH;
+                tac2->op = tac1->op;
+                tac_vector.erase(it1);
+                it1 = it2;
+                it2++;
+                continue;
+            }
+        }
+        it1++;
+        it2++;
+    }
 }
 
 
