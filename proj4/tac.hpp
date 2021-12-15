@@ -233,7 +233,7 @@ void ir_init() {
 /**
  * recursive function declare [Analyze Semantic Entry]
  */
-void ir_starter(ast_node *root);
+void ir_starter(ast_node *root, bool show);
 void ir_ext_def_list(ast_node *node);
 void ir_ext_dec_list(ast_node *node, Type * type);
 void ir_ext_def(ast_node *node);
@@ -401,12 +401,12 @@ void reduce_tmp(){
 /**
  * Program: ExtDefList
 */
-void ir_starter(ast_node *root) {
+void ir_starter(ast_node *root,bool show) {
     ir_init();
     ir_ext_def_list(root->children[0]);
     optimize();
     optimize_const();
-    ir_generate();
+    if(show)ir_generate();
 }
 
 /**

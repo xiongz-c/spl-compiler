@@ -227,7 +227,8 @@ int main(int argc, char **argv) {
         //print_tree(root,0);
         bool with_error = semanticEntry(root);
         if (!with_error) {
-            ir_starter(root);
+            ir_starter(root,false);
+            mips32_gen();
         }
     }
     return 0;

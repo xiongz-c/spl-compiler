@@ -1,6 +1,5 @@
 %{
-    #include "semantic.hpp"
-    #include "tac.hpp"
+    #include "mips32.hpp"
     #include "syntax.tab.h"
     #define YY_USER_ACTION \
         yylloc.first_line = yylineno; \
