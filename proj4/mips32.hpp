@@ -27,6 +27,22 @@ struct VarDesc {    // the variable descriptor
     /* add other fields as you need */
     struct VarDesc *next;
 } *vars;
+tac *emit_code(tac *head){
+    tac *(*tac_emitter)(tac*);
+    tac *tac_code = head;
+    emit_preamble();
+    emit_read_function();
+    emit_write_function();
+    while(tac_code != NULL){
+        if(_tac_kind(tac_code) != NONE){
+            tac_emitter = emitter[_tac_kind(tac_code)];
+            tac_code = tac_emitter(tac_code);
+        }
+        else{
+            tac_code = tac_code->next;
+        }
+    }
+}
 
 void mips32_gen(){
     regs[zero].name = "$zero";
