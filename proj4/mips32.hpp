@@ -1,8 +1,62 @@
 #ifndef MIPS_H
 #define MIPS_H
 #include "tac.hpp"
+using namespace std;
+void emit_preamble();
+void emit_read_function();
+void emit_write_function();
+void _mips_printf(const char *fmt, ...);
+
 
 extern vector<Tac*> tac_vector;
+
+void _mips_printf(const char *fmt, ...){
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+    printf("\n");
+}
+
+void _mips_iprintf(const char *fmt, ...){
+    va_list args;
+    printf("  "); // `iprintf` stands for indented printf
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+    printf("\n");
+}
+
+void emit_preamble(){
+    _mips_printf("# SPL compiler generated assembly");
+    _mips_printf(".data");
+    _mips_printf("_prmpt: .asciiz \"Enter an integer: \"");
+    _mips_printf("_eol: .asciiz \"\\n\"");
+    _mips_printf(".globl main");
+    _mips_printf(".text");
+}
+
+void emit_read_function(){
+    _mips_printf("read:");
+    _mips_iprintf("li $v0, 4");
+    _mips_iprintf("la $a0, _prmpt");
+    _mips_iprintf("syscall");
+    _mips_iprintf("li $v0, 5");
+    _mips_iprintf("syscall");
+    _mips_iprintf("jr $ra");
+}
+
+void emit_write_function(){
+    _mips_printf("write:");
+    _mips_iprintf("li $v0, 1");
+    _mips_iprintf("syscall");
+    _mips_iprintf("li $v0, 4");
+    _mips_iprintf("la $a0, _eol");
+    _mips_iprintf("syscall");
+    _mips_iprintf("move $v0, $0");
+    _mips_iprintf("jr $ra");
+}
+
 
 typedef enum {
     zero, at, v0, v1, a0, a1, a2, a3,
@@ -27,20 +81,17 @@ struct VarDesc {    // the variable descriptor
     /* add other fields as you need */
     struct VarDesc *next;
 } *vars;
-tac *emit_code(tac *head){
-    tac *(*tac_emitter)(tac*);
-    tac *tac_code = head;
+
+
+void emit_code(){
     emit_preamble();
     emit_read_function();
     emit_write_function();
-    while(tac_code != NULL){
-        if(_tac_kind(tac_code) != NONE){
-            tac_emitter = emitter[_tac_kind(tac_code)];
-            tac_code = tac_emitter(tac_code);
-        }
-        else{
-            tac_code = tac_code->next;
-        }
+    auto itr = tac_vector.begin();
+    while(itr != tac_vector.end()){
+        Tac * tac =  *itr;
+        //tac->to_string();
+        itr++;
     }
 }
 
@@ -63,6 +114,9 @@ void mips32_gen(){
     regs[gp].name = "$gp";
     regs[sp].name = "$sp"; regs[fp].name = "$fp";
     regs[ra].name = "$ra";
+    vars = (struct VarDesc*)malloc(sizeof(struct VarDesc));
+    vars->next = NULL;
+    emit_code();
 }
 
 #endif // MIPS_H
