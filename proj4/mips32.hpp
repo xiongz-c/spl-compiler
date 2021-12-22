@@ -18,8 +18,9 @@ public:
     Block(Tac* ld) {this->ir.push_back(ld);}
 
     void print() {
+        cout <<"========block begin========" << endl;
         for (auto item: ir) item->to_string();
-        cout << endl << "========block========" << endl;
+        cout <<"========block end========" << endl;
     }
 };
 
@@ -45,6 +46,7 @@ void init_block_list() {
             Block *node = block_list.back();
             node->ir.push_back(*itr);
         }
+        itr++;
     }
 }
 
