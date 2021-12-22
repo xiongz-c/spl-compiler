@@ -94,25 +94,32 @@ class Block {
 public:
     vector<Tac*> ir;
 
-    Block(Tac* ld) {
-        this.ir.push_back(ld);
-    }
+    Block(Tac* ld) {this->ir.push_back(ld);}
 
     void print() {
-
-        for (auto item: ir) {
-            cout << item->to_string()
-        }
-        cout << endl << "========block========" << endl;
+        cout <<"========block begin========" << endl;
+        for (auto item: ir) item->to_string();
+        cout <<"========block end========" << endl;
     }
 };
 
-list<Block> block_list;
+list<Block*> block_list;
 
+//JUMP和LABEL
 bool is_leader(Tac* tac) {
     if (tac->tac_type == Tac::GOTO
     || tac->tac_type == Tac::IF
-    || tac->tac_type == Tac::LABEL) { // 跳转目标一定是label
+    || tac->tac_type == Tac::LABEL) {
+        return true;
+    }
+
+    return false;
+}
+
+// JUMP后一句
+bool after_jump(Tac* tac) {
+    if (tac->tac_type == Tac::GOTO
+    || tac->tac_type == Tac::IF) { 
         return true;
     }
 
@@ -122,19 +129,20 @@ bool is_leader(Tac* tac) {
 void init_block_list() {
     auto itr = tac_vector.begin();
     while(itr != tac_vector.end()){
-        if (itr == tac_vector.begin() || is_leader(*itr) || is_leader(*(itr-1))) {
+        if (itr == tac_vector.begin() || is_leader(*itr) || after_jump(*(itr-1))) {
             Block *node = new Block(*itr);
             block_list.push_back(node);
         } else {
             Block *node = block_list.back();
             node->ir.push_back(*itr);
         }
+        itr++;
     }
 }
 
 void print_blocks() {
     for (auto it : block_list) {
-        it.print();
+        it->print();
     }
 }
 
@@ -212,9 +220,9 @@ struct VarDesc {    // the variable descriptor
 
 
 void emit_code(){
-    emit_preamble();
-    emit_read_function();
-    emit_write_function();
+    // emit_preamble();
+    // emit_read_function();
+    // emit_write_function();
     auto itr = tac_vector.begin();
     while(itr != tac_vector.end()){
         Tac * tac =  *itr;
