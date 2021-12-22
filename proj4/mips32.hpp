@@ -68,13 +68,70 @@ public:
     }
 
     void print_inst() {
-
+        if (this->op != MIPS_LABEL) {
+            cout << "\t";
+        }
+        cout << this->to_string();
+        if (!debug_info.empty()) {
+            cout << "\t# " << debug_info;
+        }
+        cout << endl;
     }
 
     void set_debug(const string &debug_info) {
         this->debug_info = debug_info;
     }
 
+    string to_string() {
+        switch (this->op) {
+            case MIPS_LABEL:
+                return this->res + ":";
+            case MIPS_LI:
+                return "li " + res + ", " + arg1;
+            case MIPS_LA:
+                return "la " + res + ", " + arg1;
+            case MIPS_MOVE:
+                return "move " + res + ", " + arg1;
+            case MIPS_ADDI:
+                return "addi " + res + ", " + arg1 + ", " + arg2;
+            case MIPS_ADD:
+                return "add " + res + ", " + arg1 + ", " + arg2;
+            case MIPS_SUB:
+                return "sub " + res + ", " + arg1 + ", " + arg2;
+            case MIPS_MUL:
+                return "mul " + res + ", " + arg1 + ", " + arg2;
+            case MIPS_DIV:
+                return "div " + arg1 + ", " + arg2;
+            case MIPS_MFLO:
+                return "mflo " + res;
+            case MIPS_LW:
+                return "lw " + res + ", " + arg2 + '(' + arg1 + ')';
+            case MIPS_SW:
+                return "sw " + res + ", " + arg2 + '(' + arg1 + ')';
+            case MIPS_J:
+                return "j " + res;
+            case MIPS_JAL:
+                return "jal " + res;
+            case MIPS_JR:
+                return "jr " + res;
+            case MIPS_BLT:
+                return "blt " + arg1 + ", " + arg2 + ", " + res;
+            case MIPS_BLE:
+                return "ble " + arg1 + ", " + arg2 + ", " + res;
+            case MIPS_BGT:
+                return "bgt " + arg1 + ", " + arg2 + ", " + res;
+            case MIPS_BGE:
+                return "bge " + arg1 + ", " + arg2 + ", " + res;
+            case MIPS_BNE:
+                return "bne " + arg1 + ", " + arg2 + ", " + res;
+            case MIPS_BEQ:
+                return "beq " + arg1 + ", " + arg2 + ", " + res;
+            case MIPS_SYSCALL:
+                return "syscall";
+            default:
+                return "";
+        }
+    }
 };
 
 class Mips {
@@ -93,13 +150,24 @@ public:
 class Block {
 public:
     vector<Tac*> ir;
+    Mips* mips;
 
     Block(Tac* ld) {this->ir.push_back(ld);}
 
+    // 打印block里的ir指令, 用于debug
     void print() {
         cout <<"========block begin========" << endl;
         for (auto item: ir) item->to_string();
         cout <<"========block end========" << endl;
+    }
+
+    // 设置当前所属的mips类
+    void set_mips(Mips* m) {
+        this->mips = m;
+    }
+    // 向当前所属的mips类添加指令
+    void gen_code() {
+
     }
 };
 
@@ -112,7 +180,6 @@ bool is_leader(Tac* tac) {
     || tac->tac_type == Tac::LABEL) {
         return true;
     }
-
     return false;
 }
 
@@ -122,7 +189,6 @@ bool after_jump(Tac* tac) {
     || tac->tac_type == Tac::IF) { 
         return true;
     }
-
     return false;
 }
 
@@ -218,17 +284,24 @@ struct VarDesc {    // the variable descriptor
     struct VarDesc *next;
 } *vars;
 
+Mips* gen_mips() {
+    Mips *m = new Mips;
+    auto iter = block_list.begin();
+    while (iter != block_list.end()) {
+        Block *block = (*iter);
+        block->set_mips(m);
+        block->gen_code();
+        iter++;
+    }
+    return m;
+}
 
 void emit_code(){
-    // emit_preamble();
-    // emit_read_function();
-    // emit_write_function();
-    auto itr = tac_vector.begin();
-    while(itr != tac_vector.end()){
-        Tac * tac =  *itr;
-        //tac->to_string();
-        itr++;
-    }
+     emit_preamble();
+     emit_read_function();
+     emit_write_function();
+     Mips *mips = gen_mips();
+     mips->output();
 }
 
 void mips32_gen(){
@@ -253,7 +326,6 @@ void mips32_gen(){
     vars = (struct VarDesc*)malloc(sizeof(struct VarDesc));
     vars->next = NULL;
     init_block_list();
-    print_blocks();
     emit_code();
 }
 
