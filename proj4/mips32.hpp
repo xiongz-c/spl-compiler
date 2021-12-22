@@ -15,20 +15,15 @@ class Block {
 public:
     vector<Tac*> ir;
 
-    Block(Tac* ld) {
-        this.ir.push_back(ld);
-    }
+    Block(Tac* ld) {this->ir.push_back(ld);}
 
     void print() {
-
-        for (auto item: ir) {
-            cout << item->to_string()
-        }
+        for (auto item: ir) item->to_string();
         cout << endl << "========block========" << endl;
     }
 };
 
-list<Block> block_list;
+list<Block*> block_list;
 
 bool is_leader(Tac* tac) {
     if (tac->tac_type == Tac::GOTO
@@ -55,7 +50,7 @@ void init_block_list() {
 
 void print_blocks() {
     for (auto it : block_list) {
-        it.print();
+        it->print();
     }
 }
 
