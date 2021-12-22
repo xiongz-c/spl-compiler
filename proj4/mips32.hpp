@@ -6,9 +6,58 @@ void emit_preamble();
 void emit_read_function();
 void emit_write_function();
 void _mips_printf(const char *fmt, ...);
-
+void _mips_iprintf(const char *fmt, ...);
 
 extern vector<Tac*> tac_vector;
+
+
+class Block {
+public:
+    vector<Tac*> ir;
+
+    Block(Tac* ld) {
+        this.ir.push_back(ld);
+    }
+
+    void print() {
+
+        for (auto item: ir) {
+            cout << item->to_string()
+        }
+        cout << endl << "========block========" << endl;
+    }
+};
+
+list<Block> block_list;
+
+bool is_leader(Tac* tac) {
+    if (tac->tac_type == Tac::GOTO
+    || tac->tac_type == Tac::IF
+    || tac->tac_type == Tac::LABEL) { // 跳转目标一定是label
+        return true;
+    }
+
+    return false;
+}
+
+void init_block_list() {
+    auto itr = tac_vector.begin();
+    while(itr != tac_vector.end()){
+        if (itr == tac_vector.begin() || is_leader(*itr) || is_leader(*(itr-1))) {
+            Block *node = new Block(*itr);
+            block_list.push_back(node);
+        } else {
+            Block *node = block_list.back();
+            node->ir.push_back(*itr);
+        }
+    }
+}
+
+void print_blocks() {
+    for (auto it : block_list) {
+        it.print();
+    }
+}
 
 void _mips_printf(const char *fmt, ...){
     va_list args;
@@ -116,6 +165,8 @@ void mips32_gen(){
     regs[ra].name = "$ra";
     vars = (struct VarDesc*)malloc(sizeof(struct VarDesc));
     vars->next = NULL;
+    init_block_list();
+    print_blocks();
     emit_code();
 }
 
