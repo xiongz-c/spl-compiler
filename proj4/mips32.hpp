@@ -10,6 +10,85 @@ void _mips_iprintf(const char *fmt, ...);
 
 extern vector<Tac*> tac_vector;
 
+enum MipsOp {
+    MIPS_LABEL,
+    MIPS_LI,
+    MIPS_LA,
+    MIPS_MOVE,
+    MIPS_ADDI,
+    MIPS_ADD,
+    MIPS_SUB,
+    MIPS_MUL,
+    MIPS_DIV,
+    MIPS_MFLO,
+    MIPS_LW,
+    MIPS_SW,
+    MIPS_J,
+    MIPS_JAL,
+    MIPS_JR,
+    MIPS_BLT,
+    MIPS_BLE,
+    MIPS_BGT,
+    MIPS_BGE,
+    MIPS_BNE,
+    MIPS_BEQ,
+    MIPS_SYSCALL
+};
+
+class Inst {
+public:
+    string res;
+    string arg1;
+    string arg2;
+    MipsOp op;
+
+    stirng debug_info; // comment for debug
+
+
+    Inst(MipsOp op){
+        this->op = op;
+    }
+
+    Inst(MipsOp op, const string &res){
+        this->op = op;
+        this->res = res;
+    }
+
+    Inst(MipsOp op, const string &res, const string &arg1){
+        this->op = op;
+        this->res = res;
+        this->arg1 = arg1;
+    }
+
+    Inst(MipsOp op, const string &res, const string &arg1, const string &arg2){
+        this->op = op;
+        this->res = res;
+        this->arg1 = arg1;
+        this->arg2 = arg2;
+    }
+
+    void print_inst() {
+
+    }
+
+    void set_debug(const string &debug_info) {
+        this->debug_info = debug_info;
+    }
+
+};
+
+class Mips {
+public:
+    list<Inst*> instructions;
+
+
+    void output() {
+        for (auto it: instructions) {
+            it->print_inst();
+        }
+    }
+};
+
 
 class Block {
 public:
