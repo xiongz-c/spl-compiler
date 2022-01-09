@@ -7,7 +7,6 @@ void emit_read_function();
 void emit_write_function();
 void _mips_printf(const char *fmt, ...);
 void _mips_iprintf(const char *fmt, ...);
-
 extern vector<Tac*> tac_vector;
 
 enum MipsOp {
@@ -43,21 +42,22 @@ typedef enum {
 } Register;
 
 unordered_map<Register, string> regToStr = {
-        {zero,"zero"},
-        {at,"at"},
-        {v0,"v0"},{v1,"v1"},
-        {a0,"a0"}, {a1,"a1"}, {a2,"a2"}, {a3,"a3"},
-        {t0,"t0"}, {t1,"t1"}, {t2,"t2"}, {t3,"t3"}, {t4,"t4"}, {t5,"t5"}, {t6,"t6"}, {t7,"t7"},
-        {s0,"s0"}, {s1,"s1"}, {s2,"s2"}, {s3,"s3"}, {s4,"s4"}, {s5,"s5"}, {s6,"s6"}, {s7,"s7"},
-        {t8,"t8"}, {t9,"t9"}, {k0,"k0"}, {k1,"k1"}, {gp,"gp"}, {sp,"sp"}, {fp,"fp"}, {ra,"ra"},
+        {zero,"$zero"},
+        {at,"$at"},
+        {v0,"$v0"},{v1,"$v1"},
+        {a0,"$a0"}, {a1,"$a1"}, {a2,"$a2"}, {a3,"$a3"},
+        {t0,"$t0"}, {t1,"$t1"}, {t2,"$t2"}, {t3,"$t3"}, {t4,"$t4"}, {t5,"$t5"}, {t6,"$t6"}, {t7,"$t7"},
+        {s0,"$s0"}, {s1,"$s1"}, {s2,"$s2"}, {s3,"$s3"}, {s4,"$s4"}, {s5,"$s5"}, {s6,"$s6"}, {s7,"$s7"},
+        {t8,"$t8"}, {t9,"$t9"}, {k0,"$k0"}, {k1,"$k1"}, {gp,"$gp"}, {sp,"$sp"}, {fp,"$fp"}, {ra,"$ra"},
+        {NO_REG,"NO_REG"}
 };
 
 Register localAllocate();
-
+int offset_po_fp = 0;
 struct AddressDesc{
     string name;
-    Register reg_num; // the number of register eg:  t0 is 8
-    int offset; // offset to $fp
+    Register reg_num = NO_REG; // the number of register eg:  t0 is 8
+    int offset = -1; // offset to $fp
     bool isPlus;
 
     AddressDesc(string name, Register reg, int offset, bool isPlus) {
@@ -69,12 +69,14 @@ struct AddressDesc{
 
 };
 
+AddressDesc * CONST_ADR = new AddressDesc("CONST",NO_REG,0,false);
+
 unordered_map<string, AddressDesc*> nameToAddress;
 
 struct RegDesc {    // the register descriptor
     string name;
     string var;
-    bool dirty; // value updated but not stored
+    bool dirty = false; // value updated but not stored
     bool isAllocated = false;
     AddressDesc * adr = NULL;
     /* add other fields as you need */
@@ -183,7 +185,6 @@ class Mips {
 public:
     list<Inst*> instructions;
 
-
     void output() {
         for (auto it: instructions) {
             it->print_inst();
@@ -193,13 +194,27 @@ public:
     void put_Inst(Inst * ins){
         instructions.push_back(ins);
     }
+
+    void extendStack(int bytes){
+        this->put_Inst(new Inst(MIPS_ADDI, "$sp", "$sp", to_string(-bytes)));
+    }
+
+    void recoverStack(int bytes){
+        this->put_Inst(new Inst(MIPS_ADDI, "$sp", "$sp", to_string(bytes)));
+    }
+
+
 };
+Register getRegister(string name,Mips *mips);
+
 
 class Block {
 public:
     vector<Tac*> ir;
     vector<Tac*> param_tac_list; //如果block是一个函数，需要计算参数的个数，确定fp的offset
+    vector<Tac*> arg_tac_list; 
     Mips* mips;
+    bool isStored = false;
 
     Block(Tac* ld) {this->ir.push_back(ld);}
 
@@ -218,6 +233,14 @@ public:
     // 生成callee
     void generateFunction(Mips* mips, Tac* tac);
     void generateAssign(Mips* mips, Tac* tac);
+    void generateIfBranch(Mips* mips, Tac* tac);
+    void generateCall(Mips* mips, Tac* tac);
+    void generateReturn(Mips* mips, Tac* tac);
+    void generateArith(Mips* mips, Tac* tac);
+    void saveRegister(Mips * mips);
+    void emit_read_function(Mips * mips, Tac* tac);
+    void emit_write_function(Mips * mips, Tac* tac);
+    void reloadRegister(Mips * mips);
 
     // 向当前所属的mips类添加指令
     void gen_code() {
@@ -226,22 +249,71 @@ public:
         auto itr = ir.begin();
         while(itr != ir.end()){
             Tac* tac = *(itr);
-            if(tac->tac_type == Tac::FUNC){
+            if(tac->tac_type == Tac::FUNC ){
                 generateFunction(this->mips,tac);
             }else if(tac->tac_type == Tac::ASSIGN){
                 generateAssign(this->mips,tac);
+            }else if (tac->tac_type == Tac::IF){
+                generateIfBranch(this->mips,tac);
+            }else if (tac->tac_type == Tac::CALL){
+                generateCall(this->mips,tac);
+            }else if (tac->tac_type == Tac::GOTO){
+                this->saveRegister(mips);
+                this->isStored = true;
+                this->mips->put_Inst(new Inst(MIPS_J, tac->operands[RESULT]));
+            }else if (tac->tac_type == Tac::RETURN){
+                generateReturn(this->mips,tac);
+            }else if (tac->tac_type == Tac::ARITH){
+                generateArith(this->mips,tac);
+            }else if (tac->tac_type == Tac::LABEL){
+                this->mips->put_Inst(new Inst(MIPS_LABEL, tac->operands[RESULT]));
+            }else if (tac->tac_type == Tac::READ){
+                emit_read_function(this->mips,tac);
+            }else if (tac->tac_type == Tac::WRITE){
+                emit_write_function(this->mips,tac);
             }
             itr++;
+        }
+        if(!this->isStored){
+            this->saveRegister(this->mips);
         }
     }
 
     void analysis(){
+        // 清理nameToAddress 的table
+        auto start_po = ir.begin();
+        if(start_po != ir.end()){
+            Tac * tac_po = *(start_po);
+            if(tac_po->tac_type == Tac::FUNC){
+                nameToAddress.clear();
+                offset_po_fp = 0;
+            }
+        }
+        Register reg = NUM_REGS;
+        for(int i = 0 ; i < (int)reg ; i++){
+            regs[i].isAllocated = false;
+            regs[i].adr = NULL;
+            regs[i].dirty = false;
+        }
+
+
+
+        for (const auto &item: nameToAddress) {
+            AddressDesc *adr = item.second;
+            regs[adr->reg_num].isAllocated = false;
+            regs[adr->reg_num].dirty = false;
+            adr->reg_num = NO_REG;
+        }
+
+        
         auto itor = ir.end();
         while(itor != ir.begin()){
             itor--;
             Tac * tac = *(itor);
             if(tac->tac_type == Tac::PARAM){
                 param_tac_list.push_back(tac);
+            }else if(tac->tac_type == Tac::ARG){
+                arg_tac_list.push_back(tac);
             }
         }
 
@@ -270,6 +342,32 @@ Register argAllocate(){
     return NO_REG;
 }
 
+Register getRegister(string name, Mips *mips){
+    auto it = nameToAddress.find(name);
+    if ( it != nameToAddress.end()){
+        AddressDesc* adr = it->second;
+        if (adr != NULL){
+            if(adr->reg_num == NO_REG ){
+                adr->reg_num = localAllocate();
+                regs[adr->reg_num].adr = adr;
+                if(adr->offset > 0){
+                    if (adr->isPlus ) {
+                        mips->put_Inst(new Inst(MIPS_LW, regToStr[adr->reg_num], "$fp", to_string(adr->offset)));
+                    } else {
+                        mips->put_Inst(new Inst(MIPS_LW, regToStr[adr->reg_num], "$fp", to_string(-adr->offset)));
+                    }
+                }
+            }
+        }
+
+        return adr->reg_num;
+    }
+    Register reg = localAllocate();
+    regs[reg].isAllocated = true;
+    AddressDesc* address = new AddressDesc(name,reg, -1, false);
+    nameToAddress.insert(make_pair(name,address));
+    return reg;
+}
 
 void Block::generateFunction(Mips* mips, Tac* tac){
     Inst * ins = new Inst(MIPS_LABEL,tac->operands[RESULT].c_str());
@@ -277,8 +375,10 @@ void Block::generateFunction(Mips* mips, Tac* tac){
     mips->put_Inst(new Inst(MIPS_MOVE, "$fp", "$sp"));
     int param_size = this->param_tac_list.size();
     int offset_cnt = param_size + 2;
+    reverse(this->param_tac_list.begin(),this->param_tac_list.end());
     for (auto item = this->param_tac_list.begin(); item != this->param_tac_list.end() ; ++item) {
         Register tmp = argAllocate();
+        regs[tmp].isAllocated = true;
         offset_cnt--;
         Tac * tac = (*item);
         string name = tac->operands[RESULT];
@@ -300,16 +400,231 @@ void Block::generateFunction(Mips* mips, Tac* tac){
 
 }
 
+//TODO 非立即数赋值没写
 void Block::generateAssign(Mips* mips, Tac* tac){
-    cout << tac->operands[RESULT] << " is assign " << endl;
-    cout << tac->operands[ARG1] << " to be assigned " << endl;
+    Register tmp = getRegister(tac->operands[RESULT],mips);
+    regs[tmp].dirty = true;
+    // 若 立即数 赋值
+    if(tac->operands[ARG1][0]=='#'){
+        mips->put_Inst(new Inst(MIPS_LI,regToStr[tmp],tac->operands[ARG1].substr(1)));
+    }else {
+        Register dest = getRegister(tac->operands[ARG1],mips);
+        mips->put_Inst(new Inst(MIPS_MOVE,regToStr[tmp],regToStr[dest]));
+    }
 }
+
+// 立即数没有特别标注 address
+void Block::generateIfBranch(Mips* mips, Tac* tac){
+    if(!this->isStored)this->saveRegister(mips);
+    this->isStored = true;
+    Register r1;
+    Register r2;
+    if(tac->operands[ARG1][0] == '#'){
+        r1 = localAllocate();
+        //regs[r1].adr = CONST_ADR;
+        mips->put_Inst(new Inst(MIPS_LI,regToStr[r1],tac->operands[ARG1].substr(1)));
+    }else{
+        r1 = getRegister(tac->operands[ARG1],mips);
+    }
+
+    if(tac->operands[ARG2][0] == '#'){
+        r2 = localAllocate();
+        mips->put_Inst(new Inst(MIPS_LI,regToStr[r2],tac->operands[ARG2].substr(1)));
+        //regs[r2].adr = CONST_ADR;
+    }else{
+        r2 = getRegister(tac->operands[ARG2],mips);
+    }
+    MipsOp branchOp;
+    if(tac->op == ">="){
+        branchOp = MIPS_BGE;
+    }else if (tac->op == ">"){
+        branchOp = MIPS_BGT;
+    }else if (tac->op == "<="){
+        branchOp = MIPS_BLE;
+    }else if (tac->op == "<"){
+        branchOp = MIPS_BLT;
+    }else if (tac->op == "=="){
+        branchOp = MIPS_BEQ;
+    }else if (tac->op == "!="){
+        branchOp = MIPS_BNE;
+    }
+    mips->put_Inst(new Inst(branchOp,tac->operands[RESULT],regToStr[r1],regToStr[r2]));
+}
+
+void Block::saveRegister(Mips * mips){
+    for(auto it = nameToAddress.begin(); it != nameToAddress.end(); it++){
+        AddressDesc * adr = it->second;
+        if(adr->reg_num != NO_REG && regs[adr->reg_num].dirty){
+            regs[adr->reg_num].dirty = false;
+            if(adr->offset < 0 ){
+                mips->extendStack(4);
+                offset_po_fp++;
+                adr->offset = offset_po_fp*4;
+            }
+            if (adr->isPlus) {
+                mips->put_Inst(new Inst(MIPS_SW,regToStr[adr->reg_num],"$fp", to_string(adr->offset)));
+            } else {
+                mips->put_Inst(new Inst(MIPS_SW,regToStr[adr->reg_num],"$fp", to_string(-adr->offset)));
+            }
+            regs[adr->reg_num].dirty = false;
+        }
+    }
+     
+}
+
+void Block::reloadRegister(Mips * mips){
+    for (auto &item: nameToAddress) {
+        AddressDesc *adr = item.second;
+        if (adr->reg_num == NO_REG)
+            continue;
+        if(adr->offset > 0){
+            if (adr->isPlus) {
+                mips->put_Inst(new Inst(MIPS_LW,regToStr[adr->reg_num],"$fp", to_string(adr->offset)));
+            } else {
+                mips->put_Inst(new Inst(MIPS_LW,regToStr[adr->reg_num],"$fp", to_string(-adr->offset)));
+            }
+        }
+    }
+}
+
+void Block::generateCall(Mips* mips, Tac* tac){
+    if(!this->isStored)this->saveRegister(mips);
+    this->isStored = true;
+    mips->extendStack(4*this->arg_tac_list.size()+8);
+    //this->put_Inst(new Inst(MIPS_ADDI, "$sp", "$sp", to_string(-bytes)));
+    mips->put_Inst(new Inst(MIPS_SW, "$fp", "$sp", "0"));
+    mips->put_Inst(new Inst(MIPS_SW, "$ra", "$sp", "4"));
+    int cnt = 0;
+    reverse(arg_tac_list.begin(),arg_tac_list.end());
+    for (Tac *tac: arg_tac_list) {
+        Register arg_reg;
+        if(tac->operands[RESULT][0] == '#'){
+            arg_reg = localAllocate();
+            mips->put_Inst(new Inst(MIPS_LI, regToStr[arg_reg],tac->operands[RESULT].substr(1)));
+        }else{
+            arg_reg = getRegister(tac->operands[RESULT],mips);
+        }
+        mips->put_Inst(new Inst(MIPS_SW, regToStr[arg_reg], "$sp", to_string(cnt * 4 + 8)));
+        cnt++;
+    }
+    this->arg_tac_list.clear();
+    
+    mips->put_Inst(new Inst(MIPS_JAL, tac->operands[ARG1]));
+    mips->put_Inst(new Inst(MIPS_LW, "$ra", "$fp", "4"));
+    mips->put_Inst(new Inst(MIPS_LW, "$fp", "$fp", "0"));
+    this->reloadRegister(mips);
+    Register reg = getRegister(tac->operands[RESULT],mips);
+    regs[reg].dirty = true;
+    mips->put_Inst(new Inst(MIPS_MOVE, regToStr[reg], "$v0"));
+    mips->recoverStack(4 * this->arg_tac_list.size() + 8);
+
+    /** restore register value from memory*/
+    // restoreRegisterStatus(mips);
+    // Reg *ret = getRegOfSymbol(pInst->target);
+    // ret->setDirty();
+    // mips->put_Inst(new MIPS_Instruction(MIPS_MOVE, ret->getName(), "$v0"));
+
+    // mips->pop(4 * numOfArgs + 8);
+}
+
+void Block::generateReturn(Mips* mips, Tac* tac){
+    if (tac->operands[RESULT][0] == '#'){
+        mips->put_Inst(new Inst(MIPS_LI, "$v0",tac->operands[RESULT].substr(1)));
+    }else {
+        Register reg_tmp = getRegister(tac->operands[RESULT],mips);
+        mips->put_Inst(new Inst(MIPS_MOVE, "$v0", regToStr[reg_tmp]));
+    }
+    mips->put_Inst(new Inst(MIPS_MOVE, "$sp", "$fp"));
+    mips->put_Inst(new Inst(MIPS_JR, "$ra"));
+}
+
+void Block::generateArith(Mips* mips, Tac* tac){
+    Register reg1,reg2;
+    if(tac->operands[ARG1][0] == '#'){
+        reg1 = localAllocate();
+        mips->put_Inst(new Inst(MIPS_LI, regToStr[reg1],tac->operands[ARG1].substr(1)));
+        regs[reg1].adr = CONST_ADR;
+    }else{
+        reg1 = getRegister(tac->operands[ARG1],mips);
+    }
+
+    if(tac->operands[ARG2][0] == '#'){
+        reg2 = localAllocate();
+        mips->put_Inst(new Inst(MIPS_LI, regToStr[reg2],tac->operands[ARG2].substr(1)));
+        regs[reg2].adr = CONST_ADR;
+    }else{
+        reg2 = getRegister(tac->operands[ARG2],mips);
+    }
+    Register dest = getRegister(tac->operands[RESULT],mips);
+    if (tac->op == "+"){
+        mips->put_Inst(new Inst(MIPS_ADD, regToStr[dest],regToStr[reg1],regToStr[reg2]));
+    }else if (tac->op == "-"){
+        mips->put_Inst(new Inst(MIPS_SUB, regToStr[dest],regToStr[reg1],regToStr[reg2]));
+    }else if (tac->op == "*"){
+         mips->put_Inst(new Inst(MIPS_MUL, regToStr[dest],regToStr[reg1],regToStr[reg2]));
+    }
+}
+
+void Block::emit_read_function(Mips * mips, Tac* tac){
+    for(auto &it : nameToAddress){
+        AddressDesc * adr = it.second;
+        if(adr->reg_num == a0){
+           if (adr->isPlus) {
+                mips->put_Inst(new Inst(MIPS_SW,"$a0","$fp", to_string(adr->offset)));
+            } else {
+                mips->put_Inst(new Inst(MIPS_SW,"$a0","$fp", to_string(-adr->offset)));
+            }
+            regs[a0].dirty = false;
+            regs[a0].isAllocated = false;
+            adr->reg_num = NO_REG;
+        }
+    }
+    mips->put_Inst(new Inst(MIPS_LI,"$v0","4"));
+    mips->put_Inst(new Inst(MIPS_LA, "$a0", "_prmpt"));
+    mips->put_Inst(new Inst(MIPS_SYSCALL));
+    Register num = getRegister(tac->operands[RESULT],mips);
+    mips->put_Inst(new Inst(MIPS_LI, "$v0", "5"));
+    mips->put_Inst(new Inst(MIPS_SYSCALL));
+
+    mips->put_Inst(new Inst(MIPS_MOVE, regToStr[num], "$v0"));
+    regs[num].dirty = true;   
+}
+
+void Block::emit_write_function(Mips * mips, Tac* tac){
+    for(auto &it : nameToAddress){
+        AddressDesc * adr = it.second;
+        if(adr->reg_num == a0){
+           if (adr->isPlus) {
+                mips->put_Inst(new Inst(MIPS_SW,"$a0","$fp", to_string(adr->offset)));
+            } else {
+                mips->put_Inst(new Inst(MIPS_SW,"$a0","$fp", to_string(-adr->offset)));
+            }
+            regs[a0].dirty = false;
+            regs[a0].isAllocated = false;
+            adr->reg_num = NO_REG;
+        }
+    }
+    mips->put_Inst(new Inst(MIPS_LI,"$v0","1"));
+    if(tac->operands[RESULT][0] == '#'){
+        mips->put_Inst(new Inst(MIPS_LI,"$a0",tac->operands[RESULT].substr(1)));
+    }else{
+        Register reg = getRegister(tac->operands[RESULT],mips);
+        mips->put_Inst(new Inst(MIPS_MOVE, "$a0", regToStr[reg]));
+    }
+    mips->put_Inst(new Inst(MIPS_SYSCALL));
+    mips->put_Inst(new Inst(MIPS_LI, "$v0", "4"));
+    mips->put_Inst(new Inst(MIPS_LA, "$a0", "_eol"));
+    mips->put_Inst(new Inst(MIPS_SYSCALL));
+}
+
+
 
 //JUMP和LABEL
 bool is_leader(Tac* tac) {
     if (tac->tac_type == Tac::GOTO
     || tac->tac_type == Tac::IF
-    || tac->tac_type == Tac::LABEL) {
+    || tac->tac_type == Tac::LABEL || tac->tac_type == Tac::FUNC 
+    ) {
         return true;
     }
     return false;
@@ -318,7 +633,7 @@ bool is_leader(Tac* tac) {
 // JUMP后一句
 bool after_jump(Tac* tac) {
     if (tac->tac_type == Tac::GOTO
-    || tac->tac_type == Tac::IF) { 
+    || tac->tac_type == Tac::IF || tac->tac_type == Tac::CALL) { 
         return true;
     }
     return false;
@@ -327,14 +642,25 @@ bool after_jump(Tac* tac) {
 void init_block_list() {
     auto itr = tac_vector.begin();
     while(itr != tac_vector.end()){
-        if (itr == tac_vector.begin() || is_leader(*itr) || after_jump(*(itr-1))) {
+        if(itr == tac_vector.begin() || (*itr)->tac_type ==  Tac::LABEL || (*itr)->tac_type ==  Tac::FUNC
+       ){
             Block *node = new Block(*itr);
             block_list.push_back(node);
-        } else {
+        }else if (itr != tac_vector.begin()){
+            itr--;
+            auto pre = itr;
+            itr++;
+            if(after_jump(*pre)){
+                Block *node = new Block(*itr);
+                block_list.push_back(node);
+                itr++;
+                continue;
+            }
             Block *node = block_list.back();
             node->ir.push_back(*itr);
         }
         itr++;
+
     }
 }
 
@@ -370,28 +696,6 @@ void emit_preamble(){
     _mips_printf(".text");
 }
 
-void emit_read_function(){
-    _mips_printf("read:");
-    _mips_iprintf("li $v0, 4");
-    _mips_iprintf("la $a0, _prmpt");
-    _mips_iprintf("syscall");
-    _mips_iprintf("li $v0, 5");
-    _mips_iprintf("syscall");
-    _mips_iprintf("jr $ra");
-}
-
-void emit_write_function(){
-    _mips_printf("write:");
-    _mips_iprintf("li $v0, 1");
-    _mips_iprintf("syscall");
-    _mips_iprintf("li $v0, 4");
-    _mips_iprintf("la $a0, _eol");
-    _mips_iprintf("syscall");
-    _mips_iprintf("move $v0, $0");
-    _mips_iprintf("jr $ra");
-}
-
-
 
 struct VarDesc {    // the variable descriptor
     string var;
@@ -414,11 +718,9 @@ Mips* gen_mips() {
 }
 
 void emit_code(){
-     emit_preamble();
-     emit_read_function();
-     emit_write_function();
-     Mips *mips = gen_mips();
-     mips->output();
+    emit_preamble();
+    Mips *mips = gen_mips();
+    mips->output();
 }
 
 void mips32_gen(){
