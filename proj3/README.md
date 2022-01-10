@@ -36,7 +36,7 @@ public:
         GOTO, RETURN, PARAM, ARG, READ, WRITE,
         EXIT} tac_type;
   	Tac(TacType tac_type);
-		Tac(TacType tac_type, const string& op, const string& arg1);
+	Tac(TacType tac_type, const string& op, const string& arg1);
   	Tac(TacType tac_type, const string& op, const string& arg1, const string& res);
   	Tac(TacType tac_type, const string& op, const string& arg1, const string& arg2, const string& res);
     Tac(TacType tac_type, const string& op, const string& res, vector<int> arr, string name);
